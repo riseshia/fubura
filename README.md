@@ -12,17 +12,17 @@ TBW
 ## How to use
 
 ```
-usage: eber <command> [<args> ...]
+Usage: eber-cli <COMMAND>
 
 Commands:
-  apply
-    apply schedules to EventBridge Scheduler
+  apply  apply schedules to EventBridge Scheduler
+  plan   plan schedules from EventBridge Scheduler
+  init   generate schedules bootstrap
+  help   Print this message or the help of the given subcommand(s)
 
-  plan
-    plan schedules from EventBridge Scheduler
-
-  init
-    generate schedules bootstrap
+Options:
+  -h, --help     Print help information
+  -V, --version  Print version information
 ```
 
 ## Configuration
