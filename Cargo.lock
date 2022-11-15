@@ -57,7 +57,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "eber-cli"
+name = "eber"
 version = "0.1.0"
 dependencies = [
  "clap",

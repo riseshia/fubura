@@ -18,17 +18,21 @@ enum Commands {
     Init,
 }
 
+use eber::commands::init::InitCommand;
+use eber::commands::plan::PlanCommand;
+use eber::commands::apply::ApplyCommand;
+
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Apply => {
-            println!("apply called!")
+            ApplyCommand::run();
         }
         Commands::Plan => {
-            println!("plan called!")
+            PlanCommand::run();
         }
         Commands::Init => {
-            println!("init called!")
+            InitCommand::run();
         }
     }
 }
