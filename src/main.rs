@@ -11,7 +11,10 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// apply schedules to EventBridge Scheduler
-    Apply,
+    Apply {
+        #[arg(short, long, default_value_t = false)]
+        force: bool
+    },
     /// plan schedules from EventBridge Scheduler
     Plan,
     /// generate schedules bootstrap
@@ -25,8 +28,8 @@ use eber::commands::apply::ApplyCommand;
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Apply => {
-            ApplyCommand::run();
+        Commands::Apply { force }=> {
+            ApplyCommand::run(force);
         }
         Commands::Plan => {
             PlanCommand::run();
