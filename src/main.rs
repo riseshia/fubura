@@ -12,6 +12,7 @@ struct Cli {
 enum Commands {
     /// apply schedules to EventBridge Scheduler
     Apply {
+        /// Skip to check changes, but only apply it.
         #[arg(short, long, default_value_t = false)]
         force: bool
     },
