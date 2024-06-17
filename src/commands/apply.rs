@@ -9,7 +9,8 @@ impl ApplyCommand {
         if !force {
             PlanCommand::run();
 
-            print!(r#"
+            print!(
+                r#"
 Do you want apply this change?
 Only 'yes' will be accepted to approve.
 

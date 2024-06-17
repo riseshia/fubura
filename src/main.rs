@@ -14,19 +14,19 @@ enum Commands {
     Apply {
         /// Skip to check changes, but only apply it.
         #[arg(short, long)]
-        force: bool
+        force: bool,
     },
     /// plan config
     Plan,
 }
 
-use fubura::commands::plan::PlanCommand;
 use fubura::commands::apply::ApplyCommand;
+use fubura::commands::plan::PlanCommand;
 
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Apply { force }=> {
+        Commands::Apply { force } => {
             ApplyCommand::run(force);
         }
         Commands::Plan => {
