@@ -22,9 +22,9 @@ enum Commands {
     Init,
 }
 
-use eber::commands::init::InitCommand;
-use eber::commands::plan::PlanCommand;
-use eber::commands::apply::ApplyCommand;
+use fubura::commands::init::InitCommand;
+use fubura::commands::plan::PlanCommand;
+use fubura::commands::apply::ApplyCommand;
 
 fn main() {
     let cli = Cli::parse();

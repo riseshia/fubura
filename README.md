@@ -1,18 +1,23 @@
-# eber-cli
+# fubura
 
-eber-cli is the CLI for EventBridge schedulER to maintain schedule as a code.
+fubura is the CLI for managing Step Function state with EventBridge scheduler at once.
 Consider it as a specialized terraform with EventBridge.
-eber-cli aims not to have cache of remote state, so it tries to fetch all schedules
+fubura aims not to have cache of remote state, so it tries to fetch all resources
 on every apply and plan, which is only difference with terraform.
 
 ## Install
 
-TBW
+XXX: to be supported
+
+```sh
+brew install rieshia/x/fubura
+```
+
 
 ## How to use
 
 ```
-Usage: eber-cli <COMMAND>
+Usage: fubura <COMMAND>
 
 Commands:
   apply  apply schedules to EventBridge Scheduler
@@ -27,11 +32,11 @@ Options:
 
 ## Configuration
 
-For managing schedule, eber uses jsonnet to describe expected state.
+For managing schedule, fubura uses jsonnet to describe expected state.
 
-### `eber-config.jsonnet`
+### `fubura-config.jsonnet`
 
-It specifies target schedule groups to be managed by eber.
+It specifies target schedule groups to be managed by fubura.
 
 ```jsonnet
 {
@@ -44,7 +49,7 @@ It specifies target schedule groups to be managed by eber.
 ### `<schedule-group>.jsonnet`
 
 It specifies schedules in given group name by filename.
-Notice that this schedule group should be specified by `eber-config.jsonnet`
+Notice that this schedule group should be specified by `fubura-config.jsonnet`
 
 ```jsonnet
 [

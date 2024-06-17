@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 fn bootstrap_files<'a>() -> HashMap<&'a str, &'a str> {
     HashMap::from([
-        ("eber-config.jsonnet", r#"{
+        ("fubura-config.jsonnet", r#"{
       targetScheduleGroups: [
         "example-group"
       ]
