@@ -7,7 +7,11 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.23", features = ["derive"] }
-text_io = "0.1.12"
-aws-config = "0.51.0"
-aws-sdk-dynamodb = "0.21.0"
 tokio = { version = "1", features = ["full"] }
+text_io = "0.1.12"
+aws-sdk-config = "1.32.0"
+aws-sdk-scheduler = "1.31.0"
+aws-sdk-sfn = "1.32.0"
+rsjsonnet-front = "0.1.1"
+rsjsonnet-lang = "0.1.1"
+similar = "2.5.0"
