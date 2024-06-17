@@ -10,19 +10,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// apply schedules to EventBridge Scheduler
+    /// apply config
     Apply {
         /// Skip to check changes, but only apply it.
         #[arg(short, long)]
         force: bool
     },
-    /// plan schedules from EventBridge Scheduler
+    /// plan config
     Plan,
-    /// generate schedules bootstrap
-    Init,
 }
 
-use fubura::commands::init::InitCommand;
 use fubura::commands::plan::PlanCommand;
 use fubura::commands::apply::ApplyCommand;
 
@@ -34,9 +31,6 @@ fn main() {
         }
         Commands::Plan => {
             PlanCommand::run();
-        }
-        Commands::Init => {
-            InitCommand::run();
         }
     }
 }
