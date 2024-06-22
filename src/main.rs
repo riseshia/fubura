@@ -9,12 +9,10 @@ fn main() {
 
     match &cli.command {
         Commands::Apply { force, config, ext_str } => {
-            println!("{:?}", ext_str);
-            ApplyCommand::run(force, config);
+            ApplyCommand::run(force, config, ext_str);
         }
         Commands::Plan { config, ext_str } => {
-            println!("{:?}", ext_str);
-            PlanCommand::run(config);
+            PlanCommand::run(config, ext_str);
         }
     }
 }
