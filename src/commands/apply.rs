@@ -1,13 +1,13 @@
-pub struct ApplyCommand;
-
 use std::process::exit;
 
 use super::plan::PlanCommand;
 
+pub struct ApplyCommand;
+
 impl ApplyCommand {
-    pub fn run(force: &bool) {
+    pub fn run(force: &bool, config: &str) {
         if !force {
-            PlanCommand::run();
+            PlanCommand::run(config);
 
             print!(
                 r#"
@@ -20,11 +20,11 @@ Enter a value: "#
             let response: String = read!("{}\n");
 
             if response != "yes" {
-                println!("apply canceled!");
+                println!("apply cancelled!");
                 exit(1)
             }
         }
 
-        println!("apply called!")
+        println!("apply called with {}!", config);
     }
 }
