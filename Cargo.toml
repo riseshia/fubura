@@ -15,3 +15,5 @@ aws-sdk-sfn = "1.32.0"
 rsjsonnet-front = "0.1.1"
 rsjsonnet-lang = "0.1.1"
 similar = "2.5.0"
+serde = { version = "1.0.150", features = ["derive"] }
+serde_json = "1.0.117"
