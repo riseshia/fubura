@@ -9,9 +9,9 @@ edition = "2021"
 clap = { version = "4.0.23", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 text_io = "0.1.12"
-aws-sdk-config = "1.32.0"
-aws-sdk-scheduler = "1.32.0"
-aws-sdk-sfn = "1.32.0"
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-scheduler = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-sfn = { version = "1", features = ["behavior-version-latest"] }
 rsjsonnet-front = "0.1.1"
 rsjsonnet-lang = "0.1.1"
 similar = "2.5.0"
