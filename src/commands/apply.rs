@@ -7,9 +7,9 @@ use super::plan::PlanCommand;
 pub struct ApplyCommand;
 
 impl ApplyCommand {
-    pub fn run(force: &bool, config: &Value) {
+    pub async fn run(force: &bool, config: &Value) {
         if !force {
-            PlanCommand::run(config);
+            PlanCommand::run(config).await;
 
             print!(
                 r#"
