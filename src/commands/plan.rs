@@ -1,13 +1,13 @@
-use crate::cli::StrKeyVal;
+use serde_json::Value;
 
 pub struct PlanCommand;
 
 impl PlanCommand {
-    pub fn run(config: &str, ext_str: &Vec<StrKeyVal>) {
+    pub fn run(config: &Value) {
         // read config
         // fetch resource from aws api
         // diff
         // emit changed resource based on diff
-        println!("plan called with {}, {:?}!", config, ext_str)
+        println!("plan called with {:?}!", config)
     }
 }

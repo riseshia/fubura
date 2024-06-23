@@ -1,15 +1,15 @@
 use std::process::exit;
 
-use crate::cli::StrKeyVal;
+use serde_json::Value;
 
 use super::plan::PlanCommand;
 
 pub struct ApplyCommand;
 
 impl ApplyCommand {
-    pub fn run(force: &bool, config: &str, ext_str: &Vec<StrKeyVal>) {
+    pub fn run(force: &bool, config: &Value) {
         if !force {
-            PlanCommand::run(config, ext_str);
+            PlanCommand::run(config);
 
             print!(
                 r#"
@@ -27,6 +27,6 @@ Enter a value: "#
             }
         }
 
-        println!("apply called with {}, {:?}!", config, ext_str)
+        println!("apply called with {:?}!", config)
     }
 }
