@@ -29,6 +29,18 @@ pub enum Commands {
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
     },
+    /// export state machine config
+    Export {
+        /// Where to export its config
+        #[arg(short, long, default_value = "exported-sfn-confg.jsonnet")]
+        config: String,
+        /// export target state machine arn
+        #[arg(long = "sfn-arn")]
+        sfn_arn: String,
+        /// export target scheduler arn (optional)
+        #[arg(long = "schedule-arn")]
+        schedule_arn: Option<String>,
+    },
 }
 
 #[derive(Clone, Debug)]
