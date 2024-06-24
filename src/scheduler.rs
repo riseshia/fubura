@@ -34,6 +34,36 @@ impl SchedulerImpl {
     }
 }
 
+pub async fn create_schedule(
+    _client: Scheduler,
+) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+    todo!()
+}
+
+pub async fn update_schedule(
+    _client: Scheduler,
+) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+    todo!()
+}
+
+pub async fn delete_schedule(
+    _client: Scheduler,
+) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+    todo!()
+}
+
+pub async fn tag_resource(
+    _client: Scheduler,
+) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+    todo!()
+}
+
+pub async fn untag_resource(
+    _client: Scheduler,
+) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+    todo!()
+}
+
 pub async fn get_schedule_group(
     client: Scheduler,
     group_name: &str,

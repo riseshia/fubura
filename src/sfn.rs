@@ -35,7 +35,37 @@ impl SfnImpl {
     }
 }
 
-pub async fn fetch_state_machine(
+pub async fn create_state_machine(
+    _client: Sfn,
+) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+    todo!()
+}
+
+pub async fn update_state_machine(
+    _client: Sfn,
+) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+    todo!()
+}
+
+pub async fn delete_state_machine(
+    _client: Sfn,
+) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+    todo!()
+}
+
+pub async fn tag_resource(
+    _client: Sfn,
+) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+    todo!()
+}
+
+pub async fn untag_resource(
+    _client: Sfn,
+) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+    todo!()
+}
+
+pub async fn describe_state_machine(
     client: Sfn,
     sfn_arn: &str,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
@@ -77,7 +107,7 @@ mod test {
                     .unwrap())
             });
 
-        let res = fetch_state_machine(
+        let res = describe_state_machine(
             mock,
             "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
         )
