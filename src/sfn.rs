@@ -36,10 +36,10 @@ impl SfnImpl {
 }
 
 pub async fn fetch_state_machine(
-    sfn_client: Sfn,
+    client: Sfn,
     sfn_arn: &str,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
-    sfn_client.describe_state_machine(sfn_arn).await
+    client.describe_state_machine(sfn_arn).await
 }
 
 #[cfg(test)]

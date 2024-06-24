@@ -35,10 +35,10 @@ impl SchedulerImpl {
 }
 
 pub async fn get_schedule_group(
-    scheduler_client: Scheduler,
+    client: Scheduler,
     group_name: &str,
 ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
-    scheduler_client.get_schedule_group(group_name).await
+    client.get_schedule_group(group_name).await
 }
 
 #[cfg(test)]
