@@ -32,14 +32,23 @@ pub enum Commands {
     /// export state machine config
     Export {
         /// Where to export its config
-        #[arg(short, long, default_value = "exported-sfn-confg.jsonnet")]
+        #[arg(
+            short,
+            long,
+            default_value = "exported-sfn-confg.jsonnet",
+            value_name = "export-path"
+        )]
         config: String,
         /// export target state machine arn
-        #[arg(long = "sfn-arn")]
+        #[arg(long = "sfn-arn", short = 'f', value_name = "state-machine-arn")]
         sfn_arn: String,
-        /// export target scheduler arn (optional)
-        #[arg(long = "schedule-arn")]
-        schedule_arn: Option<String>,
+        /// export target scheduler name with group (optional)
+        #[arg(
+            long = "scheduler-name-with-group",
+            short = 's',
+            value_name = "group-name/schedule-name"
+        )]
+        schedule_name_with_group: Option<String>,
     },
 }
 
