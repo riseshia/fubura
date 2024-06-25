@@ -1,4 +1,5 @@
 use aws_sdk_scheduler as scheduler;
+use aws_sdk_scheduler::operation::get_schedule::{GetScheduleError, GetScheduleOutput};
 use aws_sdk_scheduler::operation::get_schedule_group::{
     GetScheduleGroupError, GetScheduleGroupOutput,
 };
@@ -22,6 +23,19 @@ impl SchedulerImpl {
         Self { inner }
     }
 
+    pub async fn get_schedule(
+        &self,
+        group_name: &str,
+        schedule_name: &str,
+    ) -> Result<GetScheduleOutput, scheduler::error::SdkError<GetScheduleError>> {
+        self.inner
+            .get_schedule()
+            .group_name(group_name)
+            .name(schedule_name)
+            .send()
+            .await
+    }
+
     pub async fn get_schedule_group(
         &self,
         group_name: &str,
@@ -35,37 +49,45 @@ impl SchedulerImpl {
 }
 
 pub async fn create_schedule(
-    _client: Scheduler,
+    _client: &Scheduler,
 ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
     todo!()
 }
 
 pub async fn update_schedule(
-    _client: Scheduler,
+    _client: &Scheduler,
 ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
     todo!()
 }
 
 pub async fn delete_schedule(
-    _client: Scheduler,
+    _client: &Scheduler,
 ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
     todo!()
 }
 
 pub async fn tag_resource(
-    _client: Scheduler,
+    _client: &Scheduler,
 ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
     todo!()
 }
 
 pub async fn untag_resource(
-    _client: Scheduler,
+    _client: &Scheduler,
 ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
     todo!()
 }
 
+pub async fn get_schedule(
+    client: &Scheduler,
+    group_name: &str,
+    schedule_name: &str,
+) -> Result<GetScheduleOutput, scheduler::error::SdkError<GetScheduleError>> {
+    client.get_schedule(group_name, schedule_name).await
+}
+
 pub async fn get_schedule_group(
-    client: Scheduler,
+    client: &Scheduler,
     group_name: &str,
 ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
     client.get_schedule_group(group_name).await
@@ -89,7 +111,7 @@ mod test {
                     .build())
             });
 
-        let res = get_schedule_group(mock, "HelloWorld").await;
+        let res = get_schedule_group(&mock, "HelloWorld").await;
         assert!(res.is_ok());
     }
 }

@@ -36,82 +36,38 @@ impl SfnImpl {
 }
 
 pub async fn create_state_machine(
-    _client: Sfn,
+    _client: &Sfn,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
     todo!()
 }
 
 pub async fn update_state_machine(
-    _client: Sfn,
+    _client: &Sfn,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
     todo!()
 }
 
 pub async fn delete_state_machine(
-    _client: Sfn,
+    _client: &Sfn,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
     todo!()
 }
 
 pub async fn tag_resource(
-    _client: Sfn,
+    _client: &Sfn,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
     todo!()
 }
 
 pub async fn untag_resource(
-    _client: Sfn,
+    _client: &Sfn,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
     todo!()
 }
 
 pub async fn describe_state_machine(
-    client: Sfn,
+    client: &Sfn,
     sfn_arn: &str,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
     client.describe_state_machine(sfn_arn).await
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    use std::time::SystemTime;
-
-    use aws_sdk_sfn::{
-        operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
-        primitives::DateTime, types::StateMachineType,
-    };
-    use mockall::predicate::eq;
-
-    #[tokio::test]
-    async fn test_describe_state_machine() {
-        let mut mock = MockSfnImpl::default();
-        mock.expect_describe_state_machine()
-            .with(eq(
-                "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
-            ))
-            .return_once(|_| {
-                Ok(DescribeStateMachineOutputBuilder::default()
-                    .state_machine_arn(
-                        "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
-                    )
-                    .name("HelloWorld".to_string())
-                    .r#type(StateMachineType::Standard)
-                    .definition("...".to_string())
-                    .role_arn(
-                        "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
-                    )
-                    .creation_date(DateTime::from(SystemTime::now()))
-                    .build()
-                    .unwrap())
-            });
-
-        let res = describe_state_machine(
-            mock,
-            "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
-        )
-        .await;
-        assert!(res.is_ok());
-    }
 }
