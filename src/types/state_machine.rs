@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct CloudWatchLogsLogGroup {
     pub log_group_arn: Option<String>,
 }
@@ -14,6 +15,7 @@ impl From<aws_sdk_sfn::types::CloudWatchLogsLogGroup> for CloudWatchLogsLogGroup
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct LogDestination {
     pub cloud_watch_logs_log_group: Option<CloudWatchLogsLogGroup>,
 }
@@ -29,8 +31,10 @@ impl From<aws_sdk_sfn::types::LogDestination> for LogDestination {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct LoggingConfiguration {
     pub level: Option<String>,
+    #[serde(rename = "includeExecutionData")]
     pub include_execution_data: bool,
     pub destinations: Vec<LogDestination>,
 }
@@ -63,6 +67,7 @@ impl From<aws_sdk_sfn::types::TracingConfiguration> for TracingConfiguration {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct StateMachine {
     pub name: String,
     pub status: Option<String>,

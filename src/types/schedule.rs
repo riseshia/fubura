@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FlexibleTimeWindow {
     pub mode: String,
     pub maximum_window_in_minutes: Option<i32>,
@@ -27,6 +28,7 @@ impl From<aws_sdk_scheduler::types::DeadLetterConfig> for DeadLetterConfig {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct CapacityProviderStrategyItem {
     pub base: i32,
     pub capacity_provider: String,
@@ -44,6 +46,7 @@ impl From<aws_sdk_scheduler::types::CapacityProviderStrategyItem> for CapacityPr
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct AwsVpcConfiguration {
     pub assign_public_ip: Option<String>,
     pub security_groups: Vec<String>,
@@ -61,6 +64,7 @@ impl From<aws_sdk_scheduler::types::AwsVpcConfiguration> for AwsVpcConfiguration
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct NetworkConfiguration {
     pub awsvpc_configuration: AwsVpcConfiguration,
 }
@@ -127,6 +131,7 @@ type PlacementStrategyList = Vec<PlacementStrategy>;
 type ScheduleTagList = Vec<ScheduleTag>;
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct EcsParameters {
     pub task_definition_arn: String,
     pub capacity_provider_strategy: Vec<CapacityProviderStrategyItem>,
@@ -185,6 +190,7 @@ impl From<aws_sdk_scheduler::types::EcsParameters> for EcsParameters {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct KinesisParameters {
     pub partition_key: String,
 }
@@ -198,6 +204,7 @@ impl From<aws_sdk_scheduler::types::KinesisParameters> for KinesisParameters {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct RetryPolicy {
     pub maximum_event_age_in_seconds: Option<i32>,
     pub maximum_retry_attempts: Option<i32>,
@@ -230,6 +237,7 @@ impl From<aws_sdk_scheduler::types::SageMakerPipelineParameter> for SageMakerPip
 type SageMakerPipelineParameterList = Vec<SageMakerPipelineParameter>;
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SageMakerPipelineParameters {
     pub pipeline_parameter_list: SageMakerPipelineParameterList,
 }
@@ -248,6 +256,7 @@ impl From<aws_sdk_scheduler::types::SageMakerPipelineParameters> for SageMakerPi
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SqsParameters {
     pub message_group_id: Option<String>,
 }
@@ -261,6 +270,7 @@ impl From<aws_sdk_scheduler::types::SqsParameters> for SqsParameters {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct EventBridgeParameters {
     pub detail_type: String,
     pub source: String,
@@ -276,6 +286,7 @@ impl From<aws_sdk_scheduler::types::EventBridgeParameters> for EventBridgeParame
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ScheduleTarget {
     pub arn: String,
     pub role_arn: String,
@@ -317,11 +328,12 @@ impl From<aws_sdk_scheduler::types::Target> for ScheduleTarget {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Schedule {
     pub name: String,
     pub description: Option<String>,
     pub end_date: Option<String>,
-    pub flexible_time_window: FlexibleTimeWindow,
+    pub flexible_time_window: Option<FlexibleTimeWindow>,
     pub group_name: Option<String>,
     pub kms_key_arn: Option<String>,
     pub schedule_expression: String,
@@ -332,14 +344,15 @@ pub struct Schedule {
 
 impl From<aws_sdk_scheduler::operation::get_schedule::GetScheduleOutput> for Schedule {
     fn from(value: aws_sdk_scheduler::operation::get_schedule::GetScheduleOutput) -> Self {
-        let flexible_time_window = value.flexible_time_window().unwrap();
+        let flexible_time_window = value.flexible_time_window();
         let target = value.target().unwrap();
 
         Schedule {
             name: value.name().unwrap().to_string(),
             description: value.description().map(|s| s.to_string()),
             end_date: value.end_date().map(|s| s.to_string()),
-            flexible_time_window: FlexibleTimeWindow::from(flexible_time_window.clone()),
+            flexible_time_window: flexible_time_window
+                .map(|ftw| FlexibleTimeWindow::from(ftw.clone())),
             group_name: value.group_name().map(|s| s.to_string()),
             kms_key_arn: value.kms_key_arn().map(|s| s.to_string()),
             schedule_expression: value.schedule_expression().unwrap().to_string(),
