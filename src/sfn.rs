@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use aws_sdk_sfn as sfn;
 use aws_sdk_sfn::operation::describe_state_machine::{
     DescribeStateMachineError, DescribeStateMachineOutput,
@@ -5,6 +7,8 @@ use aws_sdk_sfn::operation::describe_state_machine::{
 
 #[allow(unused_imports)]
 use mockall::automock;
+
+use crate::types::StateMachine;
 
 pub struct SfnImpl {
     inner: sfn::Client,
@@ -65,9 +69,19 @@ pub async fn untag_resource(
     todo!()
 }
 
-pub async fn describe_state_machine(
-    client: &Sfn,
-    sfn_arn: &str,
-) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
-    client.describe_state_machine(sfn_arn).await
+pub async fn describe_state_machine(client: &Sfn, sfn_arn: &str) -> Option<StateMachine> {
+    let res = client.describe_state_machine(sfn_arn).await;
+
+    match res {
+        Ok(output) => Some(StateMachine::from(output)),
+        Err(err) => {
+            let service_error = err.into_service_error();
+            if service_error.is_state_machine_does_not_exist() {
+                None
+            } else {
+                eprintln!("failed to describe state machine: {}", service_error);
+                exit(1);
+            }
+        }
+    }
 }

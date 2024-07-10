@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use aws_sdk_scheduler as scheduler;
 use aws_sdk_scheduler::operation::get_schedule::{GetScheduleError, GetScheduleOutput};
 use aws_sdk_scheduler::operation::get_schedule_group::{
@@ -6,6 +8,8 @@ use aws_sdk_scheduler::operation::get_schedule_group::{
 
 #[allow(unused_imports)]
 use mockall::automock;
+
+use crate::types::Schedule;
 
 pub struct SchedulerImpl {
     inner: scheduler::Client,
@@ -78,12 +82,31 @@ pub async fn untag_resource(
     todo!()
 }
 
-pub async fn get_schedule(
-    client: &Scheduler,
-    group_name: &str,
-    schedule_name: &str,
-) -> Result<GetScheduleOutput, scheduler::error::SdkError<GetScheduleError>> {
-    client.get_schedule(group_name, schedule_name).await
+pub async fn get_schedule(client: &Scheduler, schedule_name_with_group: &str) -> Option<Schedule> {
+    let (group_name, schedule_name) =
+        schedule_name_with_group.split_once('/').unwrap_or_else(|| {
+            eprintln!(
+                "invalid schedule name with group: {:?}",
+                schedule_name_with_group
+            );
+            exit(1);
+        });
+
+    let res = client.get_schedule(group_name, schedule_name).await;
+
+    match res {
+        Ok(output) => Some(Schedule::from(output)),
+        Err(err) => {
+            let service_error = err.into_service_error();
+            if service_error.is_resource_not_found_exception() {
+                eprintln!("schedule does not exist: {}", schedule_name_with_group);
+                None
+            } else {
+                eprintln!("failed to get schedule: {}", service_error);
+                exit(1);
+            }
+        }
+    }
 }
 
 pub async fn get_schedule_group(

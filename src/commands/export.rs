@@ -1,52 +1,24 @@
-use std::process::exit;
-
 use crate::context::Context;
-use crate::types::{Schedule, StateMachine};
 use crate::{scheduler, sfn};
 
 pub struct ExportCommand;
 
 impl ExportCommand {
-    async fn fetch_state_machine(context: &Context, sfn_arn: &str) -> StateMachine {
-        let res = sfn::describe_state_machine(&context.sfn_client, sfn_arn)
-            .await
-            .unwrap_or_else(|err| {
-                eprintln!("failed to describe state machine: {}", err);
-                exit(1);
-            });
-
-        StateMachine::from(res)
-    }
-
-    async fn fetch_schedule(context: &Context, schedule_name_with_group: &str) -> Schedule {
-        let (group_name, schedule_name) =
-            schedule_name_with_group.split_once('/').unwrap_or_else(|| {
-                eprintln!(
-                    "invalid schedule name with group: {:?}",
-                    schedule_name_with_group
-                );
-                exit(1);
-            });
-
-        let res = scheduler::get_schedule(&context.scheduler_client, group_name, schedule_name)
-            .await
-            .unwrap_or_else(|err| {
-                eprintln!("failed to get schedule: {}", err);
-                exit(1);
-            });
-        Schedule::from(res)
-    }
-
     pub async fn run(
         context: &Context,
         config: &str,
         sfn_arn: &str,
         schedule_name_with_group: &Option<String>,
     ) {
-        let state_machine = Self::fetch_state_machine(context, sfn_arn).await;
+        let state_machine = sfn::describe_state_machine(&context.sfn_client, sfn_arn)
+            .await
+            .unwrap_or_else(|| panic!("state machine not found: {}", sfn_arn));
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
-            let schedule = Self::fetch_schedule(context, schedule_name_with_group).await;
+            let schedule =
+                scheduler::get_schedule(&context.scheduler_client, schedule_name_with_group)
+                    .await
+                    .unwrap_or_else(|| panic!("schedule not found: {}", sfn_arn));
 
             Some(serde_json::to_value(schedule).unwrap())
         } else {
@@ -58,13 +30,14 @@ impl ExportCommand {
             "state": serde_json::to_value(&state_machine).unwrap(),
         });
 
-        std::fs::write(config, serde_json::to_string_pretty(&full_config).unwrap())
-            .expect("failed to write config to file");
-
-        println!("export called with");
-        println!("- export path: {}", config);
-        println!("- target sfn arn: {}", sfn_arn);
-        println!("- target schedule arn: {:?}", schedule_name_with_group);
+        std::fs::write(config, serde_json::to_string_pretty(&full_config).unwrap()).unwrap_or_else(
+            |e| {
+                panic!(
+                    "failed to write config to file '{}' with error: {}",
+                    config, e
+                )
+            },
+        );
     }
 }
 
