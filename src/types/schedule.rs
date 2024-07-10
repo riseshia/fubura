@@ -22,9 +22,7 @@ pub struct DeadLetterConfig {
 
 impl From<aws_sdk_scheduler::types::DeadLetterConfig> for DeadLetterConfig {
     fn from(value: aws_sdk_scheduler::types::DeadLetterConfig) -> Self {
-        DeadLetterConfig {
-            arn: value.arn,
-        }
+        DeadLetterConfig { arn: value.arn }
     }
 }
 
@@ -72,7 +70,7 @@ impl From<aws_sdk_scheduler::types::NetworkConfiguration> for NetworkConfigurati
         // XXX: Could we avoid clone here?
         let awsvpc_configuration = value.awsvpc_configuration().unwrap().clone();
         NetworkConfiguration {
-            awsvpc_configuration: AwsVpcConfiguration::from(awsvpc_configuration)
+            awsvpc_configuration: AwsVpcConfiguration::from(awsvpc_configuration),
         }
     }
 }
@@ -114,7 +112,9 @@ pub struct ScheduleTag {
 }
 
 impl From<std::collections::HashMap<::std::string::String, ::std::string::String>> for ScheduleTag {
-    fn from(value: std::collections::HashMap<::std::string::String, ::std::string::String>) -> Self {
+    fn from(
+        value: std::collections::HashMap<::std::string::String, ::std::string::String>,
+    ) -> Self {
         ScheduleTag {
             key: value.get("key").unwrap().to_string(),
             value: value.get("value").unwrap().to_string(),
@@ -151,26 +151,32 @@ impl From<aws_sdk_scheduler::types::EcsParameters> for EcsParameters {
 
         EcsParameters {
             task_definition_arn: value.task_definition_arn().to_string(),
-            capacity_provider_strategy: capacity_provider_strategy.iter()
+            capacity_provider_strategy: capacity_provider_strategy
+                .iter()
                 .map(|cp| CapacityProviderStrategyItem::from(cp.clone()))
                 .collect(),
             enable_ecs_managed_tags: value.enable_ecs_managed_tags(),
             enable_execute_command: value.enable_execute_command(),
             group: value.group().map(|s| s.to_string()),
             launch_type: value.launch_type().map(|s| s.to_string()),
-            network_configuration: network_configuration.map(|nc| {
-                NetworkConfiguration::from(nc.clone())
-            }),
-            placement_constraints: value.placement_constraints().iter()
+            network_configuration: network_configuration
+                .map(|nc| NetworkConfiguration::from(nc.clone())),
+            placement_constraints: value
+                .placement_constraints()
+                .iter()
                 .map(|pc| PlacementConstraint::from(pc.clone()))
                 .collect(),
-            placement_strategy: value.placement_strategy().iter()
+            placement_strategy: value
+                .placement_strategy()
+                .iter()
                 .map(|ps| PlacementStrategy::from(ps.clone()))
                 .collect(),
             platform_version: value.platform_version().map(|s| s.to_string()),
             propagate_tags: value.propagate_tags().map(|s| s.to_string()),
             reference_id: value.reference_id().map(|s| s.to_string()),
-            tags: value.tags().iter()
+            tags: value
+                .tags()
+                .iter()
                 .map(|kv| ScheduleTag::from(kv.clone()))
                 .collect(),
             task_count: value.task_count(),
@@ -233,7 +239,8 @@ impl From<aws_sdk_scheduler::types::SageMakerPipelineParameters> for SageMakerPi
         let pipeline_parameter_list = value.pipeline_parameter_list();
 
         SageMakerPipelineParameters {
-            pipeline_parameter_list: pipeline_parameter_list.iter()
+            pipeline_parameter_list: pipeline_parameter_list
+                .iter()
                 .map(|pp| SageMakerPipelineParameter::from(pp.clone()))
                 .collect(),
         }
@@ -297,11 +304,13 @@ impl From<aws_sdk_scheduler::types::Target> for ScheduleTarget {
             role_arn: value.role_arn().to_string(),
             dead_letter_config: dead_letter_config.map(|dlc| DeadLetterConfig::from(dlc.clone())),
             ecs_parameters: ecs_parameters.map(|ecs| EcsParameters::from(ecs.clone())),
-            event_bridge_parameters: event_bridge_parameters.map(|ebp| EventBridgeParameters::from(ebp.clone())),
+            event_bridge_parameters: event_bridge_parameters
+                .map(|ebp| EventBridgeParameters::from(ebp.clone())),
             input: value.input().map(|s| s.to_string()),
             kinesis_parameters: kinesis_parameters.map(|kp| KinesisParameters::from(kp.clone())),
             retry_policy: retry_policy.map(|rp| RetryPolicy::from(rp.clone())),
-            sage_maker_pipeline_parameters: sage_maker_pipeline_parameters.map(|smp| SageMakerPipelineParameters::from(smp.clone())),
+            sage_maker_pipeline_parameters: sage_maker_pipeline_parameters
+                .map(|smp| SageMakerPipelineParameters::from(smp.clone())),
             sqs_parameters: sqs_parameters.map(|sp| SqsParameters::from(sp.clone())),
         }
     }
@@ -334,7 +343,9 @@ impl From<aws_sdk_scheduler::operation::get_schedule::GetScheduleOutput> for Sch
             group_name: value.group_name().map(|s| s.to_string()),
             kms_key_arn: value.kms_key_arn().map(|s| s.to_string()),
             schedule_expression: value.schedule_expression().unwrap().to_string(),
-            schedule_expression_timezone: value.schedule_expression_timezone().map(|s| s.to_string()),
+            schedule_expression_timezone: value
+                .schedule_expression_timezone()
+                .map(|s| s.to_string()),
             start_date: value.start_date().map(|s| s.to_string()),
             target: ScheduleTarget::from(target.clone()),
         }
