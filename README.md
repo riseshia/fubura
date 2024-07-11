@@ -71,5 +71,7 @@ And, this project includes software developed by:
 - aws-sdk-config: Licensed under the Apache License, Version 2.0.
 - aws-sdk-scheduler: Licensed under the Apache License, Version 2.0.
 - aws-sdk-sfn: Licensed under the Apache License, Version 2.0.
+- aws-sdk-sts: Licensed under the Apache License, Version 2.0.
 - rsjsonnet: Partially licensed under the Apache License, Version 2.0.
 - similar: Licensed under the Apache License, Version 2.0.
+- similar-asserts: Licensed under the Apache License, Version 2.0.
