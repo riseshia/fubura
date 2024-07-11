@@ -30,12 +30,12 @@ async fn main() {
         }
         Commands::Export {
             config,
-            sfn_arn,
+            sfn_name,
             schedule_name_with_group,
         } => {
             let context = Context::async_default().await;
 
-            ExportCommand::run(&context, config, sfn_arn, schedule_name_with_group).await;
+            ExportCommand::run(&context, config, sfn_name, schedule_name_with_group).await;
         }
     }
 }

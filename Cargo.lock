@@ -691,6 +691,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-scheduler",
  "aws-sdk-sfn",
+ "aws-sdk-sts",
  "clap",
  "mockall",
  "rsjsonnet-front",

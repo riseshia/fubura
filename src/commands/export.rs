@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::{scheduler, sfn};
+use crate::{scheduler, sfn, sts};
 
 pub struct ExportCommand;
 
@@ -7,10 +7,13 @@ impl ExportCommand {
     pub async fn run(
         context: &Context,
         config: &str,
-        sfn_arn: &str,
+        sfn_name: &str,
         schedule_name_with_group: &Option<String>,
     ) {
-        let state_machine = sfn::describe_state_machine(&context.sfn_client, sfn_arn)
+        let sfn_arn_prefix = sts::build_sfn_arn_prefix(context).await;
+        let sfn_arn = format!("{}{}", sfn_arn_prefix, sfn_name);
+
+        let state_machine = sfn::describe_state_machine(&context.sfn_client, &sfn_arn)
             .await
             .unwrap_or_else(|| panic!("state machine not found: {}", sfn_arn));
 
@@ -52,12 +55,24 @@ mod test {
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
         primitives::DateTime, primitives::DateTimeFormat, types::StateMachineType,
     };
+    use aws_sdk_sts::operation::get_caller_identity::builders::GetCallerIdentityOutputBuilder;
+
     use mockall::predicate::eq;
+
     use serde_json::Value;
 
     #[tokio::test]
-    async fn test_sfn_arn_schedule_arn_given() {
+    async fn test_sfn_name_schedule_name_given() {
         let mut context = Context::async_default().await;
+
+        context
+            .sts_client
+            .expect_get_caller_identity()
+            .return_once(|| {
+                Ok(GetCallerIdentityOutputBuilder::default()
+                    .account("123456789012".to_string())
+                    .build())
+            });
 
         context
             .sfn_client
@@ -112,7 +127,7 @@ mod test {
         ExportCommand::run(
             &context,
             exported_config_path,
-            "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            "HelloWorld",
             &Some("default/HelloWorld".to_string()),
         )
         .await;
@@ -164,8 +179,17 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_sfn_arn_given() {
+    async fn test_sfn_name_given() {
         let mut context = Context::async_default().await;
+
+        context
+            .sts_client
+            .expect_get_caller_identity()
+            .return_once(|| {
+                Ok(GetCallerIdentityOutputBuilder::default()
+                    .account("123456789012".to_string())
+                    .build())
+            });
 
         context
             .sfn_client
@@ -195,13 +219,7 @@ mod test {
         let exported_config_path = "tmp/hello-world-without-schedule.jsonnet";
         std::fs::remove_file(exported_config_path).ok();
 
-        ExportCommand::run(
-            &context,
-            exported_config_path,
-            "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
-            &None,
-        )
-        .await;
+        ExportCommand::run(&context, exported_config_path, "HelloWorld", &None).await;
 
         let config =
             std::fs::read_to_string(exported_config_path).expect("exported config not found");

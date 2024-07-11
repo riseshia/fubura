@@ -40,8 +40,8 @@ pub enum Commands {
         )]
         config: String,
         /// export target state machine arn
-        #[arg(long = "sfn-arn", short = 'f', value_name = "state-machine-arn")]
-        sfn_arn: String,
+        #[arg(long = "sfn-name", short = 'f', value_name = "state-machine-name")]
+        sfn_name: String,
         /// export target scheduler name with group (optional)
         #[arg(
             long = "scheduler-name-with-group",
