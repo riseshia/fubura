@@ -342,6 +342,15 @@ pub struct Schedule {
     pub target: ScheduleTarget,
 }
 
+impl Schedule {
+    pub fn schedule_name_with_group(&self) -> String {
+        match &self.group_name {
+            Some(group_name) => format!("{}/{}", group_name, self.name),
+            None => panic!("group name should be provided"),
+        }
+    }
+}
+
 impl From<aws_sdk_scheduler::operation::get_schedule::GetScheduleOutput> for Schedule {
     fn from(value: aws_sdk_scheduler::operation::get_schedule::GetScheduleOutput) -> Self {
         let flexible_time_window = value.flexible_time_window();
