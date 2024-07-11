@@ -1,15 +1,14 @@
 use std::process::exit;
 
-use serde_json::Value;
-
 use crate::context::Context;
+use crate::types::SsConfig;
 
 use super::plan::PlanCommand;
 
 pub struct ApplyCommand;
 
 impl ApplyCommand {
-    pub async fn run(context: &Context, force: &bool, config: &Value) {
+    pub async fn run(context: &Context, force: &bool, config: &SsConfig) {
         if !force {
             PlanCommand::run(context, config).await;
 

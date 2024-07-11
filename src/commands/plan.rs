@@ -1,11 +1,10 @@
-use serde_json::Value;
-
 use crate::context::Context;
+use crate::types::SsConfig;
 
 pub struct PlanCommand;
 
 impl PlanCommand {
-    pub async fn run(_context: &Context, config: &Value) {
+    pub async fn run(_context: &Context, config: &SsConfig) {
         // read config
         // fetch resource from aws api
         // diff
