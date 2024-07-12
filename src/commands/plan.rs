@@ -1,17 +1,7 @@
-use similar::TextDiff;
-
 use crate::context::Context;
+use crate::differ::print_config_diff;
 use crate::types::SsConfig;
 use crate::{scheduler, sfn, sts};
-
-fn print_diff(remote: &str, local: &str) {
-    let diff = TextDiff::from_lines(remote, local);
-
-    diff.unified_diff()
-        .header("remote", "local")
-        .to_writer(std::io::stdout())
-        .unwrap();
-}
 
 pub struct PlanCommand;
 
@@ -32,42 +22,7 @@ impl PlanCommand {
             None
         };
 
-        let remote_sfn_json_string = serde_json::to_string_pretty(&remote_sfn).unwrap();
-        let local_sfn_json_string = serde_json::to_string_pretty(&config.state).unwrap();
-
-        let mut has_no_diff = true;
-
-        if local_sfn_json_string != remote_sfn_json_string {
-            has_no_diff = false;
-            print_diff(&remote_sfn_json_string, &local_sfn_json_string);
-        }
-
-        if let Some(local_schedule) = &config.schedule {
-            let local_schedule_json_string = serde_json::to_string_pretty(&local_schedule).unwrap();
-
-            match remote_schedule {
-                Some(remote_schedule) => {
-                    let remote_schedule_json_string =
-                        serde_json::to_string_pretty(&remote_schedule).unwrap();
-
-                    if remote_schedule_json_string != local_schedule_json_string {
-                        has_no_diff = false;
-                        print_diff(&remote_schedule_json_string, &local_schedule_json_string);
-                    }
-                }
-                None => {
-                    print_diff("null", &local_schedule_json_string);
-                }
-            }
-        } else {
-            todo!("no local schedule & remote schedule exists/not exists case");
-        }
-
-        if has_no_diff {
-            println!("no difference");
-        } else {
-            std::process::exit(1);
-        }
+        print_config_diff(config, &remote_sfn, &remote_schedule);
     }
 }
 
