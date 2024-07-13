@@ -13,12 +13,9 @@ impl ExportCommand {
         let sfn_arn_prefix = sts::build_sfn_arn_prefix(context).await;
         let sfn_arn = format!("{}{}", sfn_arn_prefix, sfn_name);
 
-        let mut state_machine = sfn::describe_state_machine(&context.sfn_client, &sfn_arn)
+        let state_machine = sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn)
             .await
             .unwrap_or_else(|| panic!("state machine not found: {}", sfn_arn));
-
-        let sfn_tags = sfn::list_tags_for_resource(&context.sfn_client, &sfn_arn).await;
-        state_machine.tags = sfn_tags;
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
             let schedule = scheduler::get_schedule_with_tags(

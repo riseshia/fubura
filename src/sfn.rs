@@ -83,7 +83,7 @@ pub async fn delete_state_machine(
     todo!()
 }
 
-pub async fn list_tags_for_resource(client: &Sfn, sfn_arn: &str) -> Vec<ResourceTag> {
+async fn list_tags_for_resource(client: &Sfn, sfn_arn: &str) -> Vec<ResourceTag> {
     let res = client.list_tags_for_resource(sfn_arn).await;
 
     match res {
@@ -114,11 +114,17 @@ pub async fn untag_resource(
     todo!()
 }
 
-pub async fn describe_state_machine(client: &Sfn, sfn_arn: &str) -> Option<StateMachine> {
+pub async fn describe_state_machine_with_tags(client: &Sfn, sfn_arn: &str) -> Option<StateMachine> {
     let res = client.describe_state_machine(sfn_arn).await;
 
     match res {
-        Ok(output) => Some(StateMachine::from(output)),
+        Ok(output) => {
+            let tags = list_tags_for_resource(client, sfn_arn).await;
+            let mut sfn = StateMachine::from(output);
+            sfn.tags = tags;
+
+            Some(sfn)
+        }
         Err(err) => {
             let service_error = err.into_service_error();
             if service_error.is_state_machine_does_not_exist() {

@@ -12,7 +12,7 @@ impl ApplyCommand {
         let sfn_arn_prefix = sts::build_sfn_arn_prefix(context).await;
         let sfn_arn = format!("{}{}", sfn_arn_prefix, config.state.name);
 
-        let remote_sfn = sfn::describe_state_machine(&context.sfn_client, &sfn_arn).await;
+        let remote_sfn = sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn).await;
 
         let remote_schedule = if let Some(schedule_config) = &config.schedule {
             scheduler::get_schedule_with_tags(
