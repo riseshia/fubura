@@ -5,14 +5,12 @@ use aws_sdk_scheduler::operation::get_schedule::{GetScheduleError, GetScheduleOu
 use aws_sdk_scheduler::operation::list_tags_for_resource::{
     ListTagsForResourceError, ListTagsForResourceOutput,
 };
-use aws_sdk_scheduler::operation::tag_resource::{TagResourceError, TagResourceOutput};
-use aws_sdk_scheduler::operation::untag_resource::{UntagResourceError, UntagResourceOutput};
 use aws_sdk_scheduler::operation::update_schedule::{UpdateScheduleError, UpdateScheduleOutput};
 
 #[allow(unused_imports)]
 use mockall::automock;
 
-use crate::types::{ResourceTag, Schedule};
+use crate::types::Schedule;
 
 pub struct SchedulerImpl {
     inner: scheduler::Client,
@@ -74,41 +72,7 @@ pub async fn delete_schedule(
     todo!()
 }
 
-pub async fn tag_resource(
-    _client: &Scheduler,
-) -> Result<TagResourceOutput, scheduler::error::SdkError<TagResourceError>> {
-    todo!()
-}
-
-pub async fn untag_resource(
-    _client: &Scheduler,
-) -> Result<UntagResourceOutput, scheduler::error::SdkError<UntagResourceError>> {
-    todo!()
-}
-
-async fn list_tags_for_resource(client: &Scheduler, schedule_arn: &str) -> Vec<ResourceTag> {
-    let res = client.list_tags_for_resource(schedule_arn).await;
-
-    match res {
-        Ok(output) => {
-            let tags = output.tags();
-            tags.iter()
-                .map(|tag| ResourceTag::from(tag.clone()))
-                .collect()
-        }
-        Err(err) => {
-            panic!(
-                "failed to list tags for resource({}) with error: {}",
-                schedule_arn, err
-            );
-        }
-    }
-}
-
-pub async fn get_schedule_with_tags(
-    client: &Scheduler,
-    schedule_name_with_group: &str,
-) -> Option<Schedule> {
+pub async fn get_schedule(client: &Scheduler, schedule_name_with_group: &str) -> Option<Schedule> {
     let (group_name, schedule_name) =
         schedule_name_with_group.split_once('/').unwrap_or_else(|| {
             panic!(
@@ -120,14 +84,7 @@ pub async fn get_schedule_with_tags(
     let res = client.get_schedule(group_name, schedule_name).await;
 
     match res {
-        Ok(output) => {
-            let schedule_arn = output.arn().unwrap();
-            let tags = list_tags_for_resource(client, schedule_arn).await;
-            let mut schedule = Schedule::from(output);
-            schedule.tags = tags;
-
-            Some(schedule)
-        }
+        Ok(output) => Some(Schedule::from(output)),
         Err(err) => {
             let service_error = err.into_service_error();
             if service_error.is_resource_not_found_exception() {

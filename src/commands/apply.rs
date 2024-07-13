@@ -13,7 +13,7 @@ impl ApplyCommand {
         let remote_sfn = sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn).await;
 
         let remote_schedule = if let Some(schedule_config) = &config.schedule {
-            scheduler::get_schedule_with_tags(
+            scheduler::get_schedule(
                 &context.scheduler_client,
                 &schedule_config.schedule_name_with_group(),
             )

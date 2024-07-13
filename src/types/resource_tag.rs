@@ -25,12 +25,3 @@ impl From<aws_sdk_sfn::types::Tag> for ResourceTag {
         }
     }
 }
-
-impl From<aws_sdk_scheduler::types::Tag> for ResourceTag {
-    fn from(value: aws_sdk_scheduler::types::Tag) -> Self {
-        ResourceTag {
-            key: value.key().to_string(),
-            value: value.value().to_string(),
-        }
-    }
-}

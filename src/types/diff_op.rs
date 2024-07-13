@@ -4,11 +4,10 @@ pub enum DiffOp {
     UpdateSfn,
     UpdateSchedule,
     AddSfnTag,
-    AddScheduleTag,
     RemoveSfnTag,
-    RemoveScheduleTag,
     DeleteSfn,
     DeleteSchedule,
     NoChangeSfn,
+    NoChangeSfnTags,
     NoChangeSchedule,
 }

@@ -13,7 +13,7 @@ impl PlanCommand {
         let remote_sfn = sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn).await;
 
         let remote_schedule = if let Some(schedule_config) = &config.schedule {
-            scheduler::get_schedule_with_tags(
+            scheduler::get_schedule(
                 &context.scheduler_client,
                 &schedule_config.schedule_name_with_group(),
             )
@@ -30,13 +30,11 @@ impl PlanCommand {
 mod test {
     use super::*;
 
-    use aws_sdk_scheduler::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder as SchedulerListTagsForResourceOutputBuilder;
-    use aws_sdk_scheduler::types::builders::TagBuilder as SchedulerTagBuilder;
     use aws_sdk_scheduler::{
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
     };
-    use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder as SfnListTagsForResourceOutputBuilder;
-    use aws_sdk_sfn::types::builders::TagBuilder as SfnTagBuilder;
+    use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder;
+    use aws_sdk_sfn::types::builders::TagBuilder;
     use aws_sdk_sfn::{
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
         primitives::{DateTime, DateTimeFormat},
@@ -91,9 +89,9 @@ mod test {
                 "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
             ))
             .return_once(|_| {
-                Ok(SfnListTagsForResourceOutputBuilder::default()
+                Ok(ListTagsForResourceOutputBuilder::default()
                     .tags(
-                        SfnTagBuilder::default()
+                        TagBuilder::default()
                             .key("Name")
                             .value("HelloWorld")
                             .build(),
@@ -117,24 +115,6 @@ mod test {
                         TargetBuilder::default()
                             .arn("arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld")
                             .role_arn("arn:aws:iam::123456789012:role/service-role/HelloWorldRole")
-                            .build()
-                            .unwrap(),
-                    )
-                    .build())
-            });
-
-        context
-            .scheduler_client
-            .expect_list_tags_for_resource()
-            .with(eq(
-                "arn:aws:scheduler:us-west-2:123456789012:schedule:default/HelloWorld",
-            ))
-            .return_once(|_| {
-                Ok(SchedulerListTagsForResourceOutputBuilder::default()
-                    .tags(
-                        SchedulerTagBuilder::default()
-                            .key("Name")
-                            .value("default/HelloWorld")
                             .build()
                             .unwrap(),
                     )
@@ -182,12 +162,6 @@ mod test {
                     "sageMakerPipelineParameters": null,
                     "sqsParameters": null,
                 },
-                "tags": [
-                    {
-                        "key": "Name",
-                        "value": "default/HelloWorld"
-                    }
-                ]
             }
         });
         let ss_config: SsConfig = serde_json::from_value(ss_config_json).unwrap();
