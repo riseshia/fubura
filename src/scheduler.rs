@@ -1,13 +1,15 @@
 use std::process::exit;
 
 use aws_sdk_scheduler as scheduler;
+use aws_sdk_scheduler::operation::create_schedule::{CreateScheduleError, CreateScheduleOutput};
+use aws_sdk_scheduler::operation::delete_schedule::{DeleteScheduleError, DeleteScheduleOutput};
 use aws_sdk_scheduler::operation::get_schedule::{GetScheduleError, GetScheduleOutput};
-use aws_sdk_scheduler::operation::get_schedule_group::{
-    GetScheduleGroupError, GetScheduleGroupOutput,
-};
 use aws_sdk_scheduler::operation::list_tags_for_resource::{
     ListTagsForResourceError, ListTagsForResourceOutput,
 };
+use aws_sdk_scheduler::operation::tag_resource::{TagResourceError, TagResourceOutput};
+use aws_sdk_scheduler::operation::untag_resource::{UntagResourceError, UntagResourceOutput};
+use aws_sdk_scheduler::operation::update_schedule::{UpdateScheduleError, UpdateScheduleOutput};
 
 #[allow(unused_imports)]
 use mockall::automock;
@@ -43,17 +45,6 @@ impl SchedulerImpl {
             .await
     }
 
-    pub async fn get_schedule_group(
-        &self,
-        group_name: &str,
-    ) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
-        self.inner
-            .get_schedule_group()
-            .name(group_name)
-            .send()
-            .await
-    }
-
     pub async fn list_tags_for_resource(
         &self,
         schedule_arn: &str,
@@ -69,31 +60,31 @@ impl SchedulerImpl {
 
 pub async fn create_schedule(
     _client: &Scheduler,
-) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+) -> Result<CreateScheduleOutput, scheduler::error::SdkError<CreateScheduleError>> {
     todo!()
 }
 
 pub async fn update_schedule(
     _client: &Scheduler,
-) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+) -> Result<UpdateScheduleOutput, scheduler::error::SdkError<UpdateScheduleError>> {
     todo!()
 }
 
 pub async fn delete_schedule(
     _client: &Scheduler,
-) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+) -> Result<DeleteScheduleOutput, scheduler::error::SdkError<DeleteScheduleError>> {
     todo!()
 }
 
 pub async fn tag_resource(
     _client: &Scheduler,
-) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+) -> Result<TagResourceOutput, scheduler::error::SdkError<TagResourceError>> {
     todo!()
 }
 
 pub async fn untag_resource(
     _client: &Scheduler,
-) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
+) -> Result<UntagResourceOutput, scheduler::error::SdkError<UntagResourceError>> {
     todo!()
 }
 
@@ -150,35 +141,5 @@ pub async fn get_schedule_with_tags(
                 exit(1);
             }
         }
-    }
-}
-
-pub async fn get_schedule_group(
-    client: &Scheduler,
-    group_name: &str,
-) -> Result<GetScheduleGroupOutput, scheduler::error::SdkError<GetScheduleGroupError>> {
-    client.get_schedule_group(group_name).await
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    use aws_sdk_scheduler::operation::get_schedule_group::builders::GetScheduleGroupOutputBuilder;
-    use mockall::predicate::eq;
-
-    #[tokio::test]
-    async fn test_describe_state_machine() {
-        let mut mock = MockSchedulerImpl::default();
-        mock.expect_get_schedule_group()
-            .with(eq("HelloWorld"))
-            .return_once(|_| {
-                Ok(GetScheduleGroupOutputBuilder::default()
-                    .name("HelloWorld".to_string())
-                    .build())
-            });
-
-        let res = get_schedule_group(&mock, "HelloWorld").await;
-        assert!(res.is_ok());
     }
 }
