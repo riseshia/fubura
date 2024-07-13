@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::ResourceTag;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FlexibleTimeWindow {
     pub mode: String,
@@ -18,7 +18,7 @@ impl From<aws_sdk_scheduler::types::FlexibleTimeWindow> for FlexibleTimeWindow {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 pub struct DeadLetterConfig {
     pub arn: Option<String>,
 }
@@ -29,7 +29,7 @@ impl From<aws_sdk_scheduler::types::DeadLetterConfig> for DeadLetterConfig {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CapacityProviderStrategyItem {
     pub base: i32,
@@ -47,7 +47,7 @@ impl From<aws_sdk_scheduler::types::CapacityProviderStrategyItem> for CapacityPr
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AwsVpcConfiguration {
     pub assign_public_ip: Option<String>,
@@ -65,7 +65,7 @@ impl From<aws_sdk_scheduler::types::AwsVpcConfiguration> for AwsVpcConfiguration
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkConfiguration {
     pub awsvpc_configuration: AwsVpcConfiguration,
@@ -81,7 +81,7 @@ impl From<aws_sdk_scheduler::types::NetworkConfiguration> for NetworkConfigurati
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 pub struct PlacementConstraint {
     pub expression: Option<String>,
     pub r#type: Option<String>,
@@ -96,7 +96,7 @@ impl From<aws_sdk_scheduler::types::PlacementConstraint> for PlacementConstraint
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 pub struct PlacementStrategy {
     pub field: Option<String>,
     pub r#type: Option<String>,
@@ -114,7 +114,7 @@ impl From<aws_sdk_scheduler::types::PlacementStrategy> for PlacementStrategy {
 type PlacementConstraintList = Vec<PlacementConstraint>;
 type PlacementStrategyList = Vec<PlacementStrategy>;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EcsParameters {
     pub task_definition_arn: String,
@@ -173,7 +173,7 @@ impl From<aws_sdk_scheduler::types::EcsParameters> for EcsParameters {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct KinesisParameters {
     pub partition_key: String,
@@ -187,7 +187,7 @@ impl From<aws_sdk_scheduler::types::KinesisParameters> for KinesisParameters {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RetryPolicy {
     pub maximum_event_age_in_seconds: Option<i32>,
@@ -203,7 +203,7 @@ impl From<aws_sdk_scheduler::types::RetryPolicy> for RetryPolicy {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 pub struct SageMakerPipelineParameter {
     pub name: String,
     pub value: String,
@@ -220,7 +220,7 @@ impl From<aws_sdk_scheduler::types::SageMakerPipelineParameter> for SageMakerPip
 
 type SageMakerPipelineParameterList = Vec<SageMakerPipelineParameter>;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SageMakerPipelineParameters {
     pub pipeline_parameter_list: SageMakerPipelineParameterList,
@@ -239,7 +239,7 @@ impl From<aws_sdk_scheduler::types::SageMakerPipelineParameters> for SageMakerPi
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SqsParameters {
     pub message_group_id: Option<String>,
@@ -253,7 +253,7 @@ impl From<aws_sdk_scheduler::types::SqsParameters> for SqsParameters {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EventBridgeParameters {
     pub detail_type: String,
@@ -269,7 +269,7 @@ impl From<aws_sdk_scheduler::types::EventBridgeParameters> for EventBridgeParame
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ScheduleTarget {
     pub arn: String,
@@ -311,7 +311,7 @@ impl From<aws_sdk_scheduler::types::Target> for ScheduleTarget {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Schedule {
     pub name: String,
