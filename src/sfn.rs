@@ -1,11 +1,22 @@
 use std::process::exit;
 
 use aws_sdk_sfn as sfn;
+use aws_sdk_sfn::operation::create_state_machine::{
+    CreateStateMachineError, CreateStateMachineOutput,
+};
+use aws_sdk_sfn::operation::delete_state_machine::{
+    DeleteStateMachineError, DeleteStateMachineOutput,
+};
 use aws_sdk_sfn::operation::describe_state_machine::{
     DescribeStateMachineError, DescribeStateMachineOutput,
 };
 use aws_sdk_sfn::operation::list_tags_for_resource::{
     ListTagsForResourceError, ListTagsForResourceOutput,
+};
+use aws_sdk_sfn::operation::tag_resource::{TagResourceError, TagResourceOutput};
+use aws_sdk_sfn::operation::untag_resource::{UntagResourceError, UntagResourceOutput};
+use aws_sdk_sfn::operation::update_state_machine::{
+    UpdateStateMachineError, UpdateStateMachineOutput,
 };
 
 #[allow(unused_imports)]
@@ -56,19 +67,19 @@ impl SfnImpl {
 
 pub async fn create_state_machine(
     _client: &Sfn,
-) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+) -> Result<CreateStateMachineOutput, sfn::error::SdkError<CreateStateMachineError>> {
     todo!()
 }
 
 pub async fn update_state_machine(
     _client: &Sfn,
-) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+) -> Result<UpdateStateMachineOutput, sfn::error::SdkError<UpdateStateMachineError>> {
     todo!()
 }
 
 pub async fn delete_state_machine(
     _client: &Sfn,
-) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+) -> Result<DeleteStateMachineOutput, sfn::error::SdkError<DeleteStateMachineError>> {
     todo!()
 }
 
@@ -93,13 +104,13 @@ pub async fn list_tags_for_resource(client: &Sfn, sfn_arn: &str) -> Vec<Resource
 
 pub async fn tag_resource(
     _client: &Sfn,
-) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+) -> Result<TagResourceOutput, sfn::error::SdkError<TagResourceError>> {
     todo!()
 }
 
 pub async fn untag_resource(
     _client: &Sfn,
-) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
+) -> Result<UntagResourceOutput, sfn::error::SdkError<UntagResourceError>> {
     todo!()
 }
 
