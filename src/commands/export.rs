@@ -21,10 +21,12 @@ impl ExportCommand {
         state_machine.tags = sfn_tags;
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
-            let schedule =
-                scheduler::get_schedule(&context.scheduler_client, schedule_name_with_group)
-                    .await
-                    .unwrap_or_else(|| panic!("schedule not found: {}", sfn_arn));
+            let schedule = scheduler::get_schedule_with_tags(
+                &context.scheduler_client,
+                schedule_name_with_group,
+            )
+            .await
+            .unwrap_or_else(|| panic!("schedule not found: {}", sfn_arn));
 
             Some(serde_json::to_value(schedule).unwrap())
         } else {
@@ -51,6 +53,8 @@ impl ExportCommand {
 mod test {
     use super::*;
 
+    use aws_sdk_scheduler::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder as SchedulerListTagsForResourceOutputBuilder;
+    use aws_sdk_scheduler::types::builders::TagBuilder as SchedulerTagBuilder;
     use aws_sdk_scheduler::{
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
     };
@@ -144,6 +148,24 @@ mod test {
                     .build())
             });
 
+        context
+            .scheduler_client
+            .expect_list_tags_for_resource()
+            .with(eq(
+                "arn:aws:scheduler:us-west-2:123456789012:schedule:default/HelloWorld",
+            ))
+            .return_once(|_| {
+                Ok(SchedulerListTagsForResourceOutputBuilder::default()
+                    .tags(
+                        SchedulerTagBuilder::default()
+                            .key("Name")
+                            .value("default/HelloWorld")
+                            .build()
+                            .unwrap(),
+                    )
+                    .build())
+            });
+
         let exported_config_path = "tmp/hello-world.jsonnet";
         std::fs::remove_file(exported_config_path).ok();
 
@@ -202,6 +224,12 @@ mod test {
                         "sageMakerPipelineParameters": null,
                         "sqsParameters": null,
                     },
+                    "tags": [
+                        {
+                            "key": "Name",
+                            "value": "default/HelloWorld"
+                        }
+                    ]
                 }
             })
         );

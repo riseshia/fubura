@@ -19,7 +19,7 @@ impl PlanCommand {
         });
 
         let remote_schedule = if let Some(schedule_config) = &config.schedule {
-            scheduler::get_schedule(
+            scheduler::get_schedule_with_tags(
                 &context.scheduler_client,
                 &schedule_config.schedule_name_with_group(),
             )
@@ -36,6 +36,7 @@ impl PlanCommand {
 mod test {
     use super::*;
 
+    use aws_sdk_scheduler::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder as SchedulerListTagsForResourceOutputBuilder;
     use aws_sdk_scheduler::types::builders::TagBuilder as SchedulerTagBuilder;
     use aws_sdk_scheduler::{
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
@@ -128,6 +129,24 @@ mod test {
                     .build())
             });
 
+        context
+            .scheduler_client
+            .expect_list_tags_for_resource()
+            .with(eq(
+                "arn:aws:scheduler:us-west-2:123456789012:schedule:default/HelloWorld",
+            ))
+            .return_once(|_| {
+                Ok(SchedulerListTagsForResourceOutputBuilder::default()
+                    .tags(
+                        SchedulerTagBuilder::default()
+                            .key("Name")
+                            .value("default/HelloWorld")
+                            .build()
+                            .unwrap(),
+                    )
+                    .build())
+            });
+
         let ss_config_json = serde_json::json!({
             "state": {
                 "name": "HelloWorld",
@@ -169,6 +188,12 @@ mod test {
                     "sageMakerPipelineParameters": null,
                     "sqsParameters": null,
                 },
+                "tags": [
+                    {
+                        "key": "Name",
+                        "value": "default/HelloWorld"
+                    }
+                ]
             }
         });
         let ss_config: SsConfig = serde_json::from_value(ss_config_json).unwrap();

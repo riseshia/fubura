@@ -324,6 +324,7 @@ pub struct Schedule {
     pub schedule_expression_timezone: Option<String>,
     pub start_date: Option<String>,
     pub target: ScheduleTarget,
+    pub tags: Vec<ResourceTag>,
 }
 
 impl Schedule {
@@ -354,6 +355,7 @@ impl From<aws_sdk_scheduler::operation::get_schedule::GetScheduleOutput> for Sch
                 .map(|s| s.to_string()),
             start_date: value.start_date().map(|s| s.to_string()),
             target: ScheduleTarget::from(target.clone()),
+            tags: vec![],
         }
     }
 }
