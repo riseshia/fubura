@@ -1,3 +1,4 @@
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum DiffOp {
     CreateSfn,
     CreateSchedule,

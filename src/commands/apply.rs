@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::differ::print_config_diff;
+use crate::differ::{build_diff_ops, print_config_diff};
 use crate::types::SsConfig;
 use crate::{scheduler, sfn, sts};
 
@@ -23,6 +23,7 @@ impl ApplyCommand {
         };
 
         print_config_diff(config, &remote_sfn, &remote_schedule);
+        let _diff_ops = build_diff_ops(config, &remote_sfn, &remote_schedule);
 
         if !force {
             print!(
