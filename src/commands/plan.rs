@@ -12,6 +12,12 @@ impl PlanCommand {
 
         let remote_sfn = sfn::describe_state_machine(&context.sfn_client, &sfn_arn).await;
 
+        let sfn_tags = sfn::list_tags_for_resource(&context.sfn_client, &sfn_arn).await;
+        let remote_sfn = remote_sfn.map(|mut sfn| {
+            sfn.tags = sfn_tags;
+            sfn
+        });
+
         let remote_schedule = if let Some(schedule_config) = &config.schedule {
             scheduler::get_schedule(
                 &context.scheduler_client,
@@ -30,12 +36,16 @@ impl PlanCommand {
 mod test {
     use super::*;
 
+    use aws_sdk_scheduler::types::builders::TagBuilder as SchedulerTagBuilder;
     use aws_sdk_scheduler::{
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
     };
+    use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder as SfnListTagsForResourceOutputBuilder;
+    use aws_sdk_sfn::types::builders::TagBuilder as SfnTagBuilder;
     use aws_sdk_sfn::{
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
-        primitives::DateTime, primitives::DateTimeFormat, types::StateMachineType,
+        primitives::{DateTime, DateTimeFormat},
+        types::StateMachineType,
     };
     use aws_sdk_sts::operation::get_caller_identity::builders::GetCallerIdentityOutputBuilder;
 
@@ -80,6 +90,23 @@ mod test {
             });
 
         context
+            .sfn_client
+            .expect_list_tags_for_resource()
+            .with(eq(
+                "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            ))
+            .return_once(|_| {
+                Ok(SfnListTagsForResourceOutputBuilder::default()
+                    .tags(
+                        SfnTagBuilder::default()
+                            .key("Name")
+                            .value("HelloWorld")
+                            .build(),
+                    )
+                    .build())
+            });
+
+        context
             .scheduler_client
             .expect_get_schedule()
             .with(eq("default"), eq("HelloWorld"))
@@ -113,6 +140,12 @@ mod test {
                 "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
                 "revisionId": null,
                 "status": null,
+                "tags": [
+                    {
+                        "key": "Name",
+                        "value": "HelloWorld"
+                    }
+                ]
             },
             "schedule": {
                 "groupName": "default",

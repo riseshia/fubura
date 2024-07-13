@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use super::ResourceTag;
+
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudWatchLogsLogGroup {
@@ -79,6 +81,7 @@ pub struct StateMachine {
     pub label: Option<String>,
     pub revision_id: Option<String>,
     pub description: Option<String>,
+    pub tags: Vec<ResourceTag>,
 }
 
 impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOutput>
@@ -102,6 +105,7 @@ impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOu
             label: value.label().map(|l| l.to_string()),
             revision_id: value.revision_id().map(|ri| ri.to_string()),
             description: value.description().map(|d| d.to_string()),
+            tags: vec![],
         }
     }
 }

@@ -13,9 +13,12 @@ impl ExportCommand {
         let sfn_arn_prefix = sts::build_sfn_arn_prefix(context).await;
         let sfn_arn = format!("{}{}", sfn_arn_prefix, sfn_name);
 
-        let state_machine = sfn::describe_state_machine(&context.sfn_client, &sfn_arn)
+        let mut state_machine = sfn::describe_state_machine(&context.sfn_client, &sfn_arn)
             .await
             .unwrap_or_else(|| panic!("state machine not found: {}", sfn_arn));
+
+        let sfn_tags = sfn::list_tags_for_resource(&context.sfn_client, &sfn_arn).await;
+        state_machine.tags = sfn_tags;
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
             let schedule =
@@ -51,9 +54,12 @@ mod test {
     use aws_sdk_scheduler::{
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
     };
+    use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder as SfnListTagsForResourceOutputBuilder;
+    use aws_sdk_sfn::types::builders::TagBuilder as SfnTagBuilder;
     use aws_sdk_sfn::{
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
-        primitives::DateTime, primitives::DateTimeFormat, types::StateMachineType,
+        primitives::{DateTime, DateTimeFormat},
+        types::StateMachineType,
     };
     use aws_sdk_sts::operation::get_caller_identity::builders::GetCallerIdentityOutputBuilder;
 
@@ -97,6 +103,23 @@ mod test {
                     )
                     .build()
                     .unwrap())
+            });
+
+        context
+            .sfn_client
+            .expect_list_tags_for_resource()
+            .with(eq(
+                "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            ))
+            .return_once(|_| {
+                Ok(SfnListTagsForResourceOutputBuilder::default()
+                    .tags(
+                        SfnTagBuilder::default()
+                            .key("Name")
+                            .value("HelloWorld")
+                            .build(),
+                    )
+                    .build())
             });
 
         context
@@ -150,6 +173,12 @@ mod test {
                     "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
                     "revisionId": null,
                     "status": null,
+                    "tags": [
+                        {
+                            "key": "Name",
+                            "value": "HelloWorld"
+                        }
+                    ]
                 },
                 "schedule": {
                     "groupName": "default",
@@ -216,6 +245,23 @@ mod test {
                     .unwrap())
             });
 
+        context
+            .sfn_client
+            .expect_list_tags_for_resource()
+            .with(eq(
+                "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            ))
+            .return_once(|_| {
+                Ok(SfnListTagsForResourceOutputBuilder::default()
+                    .tags(
+                        SfnTagBuilder::default()
+                            .key("Name")
+                            .value("HelloWorld")
+                            .build(),
+                    )
+                    .build())
+            });
+
         let exported_config_path = "tmp/hello-world-without-schedule.jsonnet";
         std::fs::remove_file(exported_config_path).ok();
 
@@ -239,6 +285,12 @@ mod test {
                     "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
                     "revisionId": null,
                     "status": null,
+                    "tags": [
+                        {
+                            "key": "Name",
+                            "value": "HelloWorld"
+                        }
+                    ]
                 },
                 "schedule": null,
             })

@@ -4,11 +4,14 @@ use aws_sdk_sfn as sfn;
 use aws_sdk_sfn::operation::describe_state_machine::{
     DescribeStateMachineError, DescribeStateMachineOutput,
 };
+use aws_sdk_sfn::operation::list_tags_for_resource::{
+    ListTagsForResourceError, ListTagsForResourceOutput,
+};
 
 #[allow(unused_imports)]
 use mockall::automock;
 
-use crate::types::StateMachine;
+use crate::types::{ResourceTag, StateMachine};
 
 pub struct SfnImpl {
     inner: sfn::Client,
@@ -37,6 +40,18 @@ impl SfnImpl {
             .send()
             .await
     }
+
+    #[allow(dead_code)]
+    pub async fn list_tags_for_resource(
+        &self,
+        sfn_arn: &str,
+    ) -> Result<ListTagsForResourceOutput, sfn::error::SdkError<ListTagsForResourceError>> {
+        self.inner
+            .list_tags_for_resource()
+            .resource_arn(sfn_arn)
+            .send()
+            .await
+    }
 }
 
 pub async fn create_state_machine(
@@ -55,6 +70,25 @@ pub async fn delete_state_machine(
     _client: &Sfn,
 ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
     todo!()
+}
+
+pub async fn list_tags_for_resource(client: &Sfn, sfn_arn: &str) -> Vec<ResourceTag> {
+    let res = client.list_tags_for_resource(sfn_arn).await;
+
+    match res {
+        Ok(output) => {
+            let tags = output.tags();
+            tags.iter()
+                .map(|tag| ResourceTag::from(tag.clone()))
+                .collect()
+        }
+        Err(err) => {
+            panic!(
+                "failed to list tags for resource({}) with error: {}",
+                sfn_arn, err
+            );
+        }
+    }
 }
 
 pub async fn tag_resource(
