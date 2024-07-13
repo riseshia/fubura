@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use aws_sdk_sfn as sfn;
 use aws_sdk_sfn::operation::create_state_machine::{
     CreateStateMachineError, CreateStateMachineOutput,
@@ -130,8 +128,7 @@ pub async fn describe_state_machine_with_tags(client: &Sfn, sfn_arn: &str) -> Op
             if service_error.is_state_machine_does_not_exist() {
                 None
             } else {
-                eprintln!("failed to describe state machine: {}", service_error);
-                exit(1);
+                panic!("failed to describe state machine: {}", service_error);
             }
         }
     }

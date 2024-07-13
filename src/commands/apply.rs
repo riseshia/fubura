@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use crate::context::Context;
 use crate::differ::print_config_diff;
 use crate::types::SsConfig;
@@ -38,8 +36,7 @@ Enter a value: "#
             let response: String = read!("{}\n");
 
             if response != "yes" {
-                println!("apply cancelled!");
-                exit(1);
+                panic!("apply cancelled!");
             }
         }
 

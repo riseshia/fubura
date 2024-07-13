@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use aws_sdk_scheduler as scheduler;
 use aws_sdk_scheduler::operation::create_schedule::{CreateScheduleError, CreateScheduleOutput};
 use aws_sdk_scheduler::operation::delete_schedule::{DeleteScheduleError, DeleteScheduleOutput};
@@ -113,11 +111,10 @@ pub async fn get_schedule_with_tags(
 ) -> Option<Schedule> {
     let (group_name, schedule_name) =
         schedule_name_with_group.split_once('/').unwrap_or_else(|| {
-            eprintln!(
+            panic!(
                 "invalid schedule name with group: {:?}",
                 schedule_name_with_group
             );
-            exit(1);
         });
 
     let res = client.get_schedule(group_name, schedule_name).await;
@@ -137,8 +134,7 @@ pub async fn get_schedule_with_tags(
                 eprintln!("schedule does not exist: {}", schedule_name_with_group);
                 None
             } else {
-                eprintln!("failed to get schedule: {}", service_error);
-                exit(1);
+                panic!("failed to get schedule: {}", service_error);
             }
         }
     }
