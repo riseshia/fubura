@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::ResourceTag;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudWatchLogsLogGroup {
     pub log_group_arn: Option<String>,
@@ -16,7 +16,7 @@ impl From<aws_sdk_sfn::types::CloudWatchLogsLogGroup> for CloudWatchLogsLogGroup
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct LogDestination {
     pub cloud_watch_logs_log_group: Option<CloudWatchLogsLogGroup>,
@@ -32,7 +32,7 @@ impl From<aws_sdk_sfn::types::LogDestination> for LogDestination {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct LoggingConfiguration {
     pub level: Option<String>,
@@ -55,7 +55,7 @@ impl From<aws_sdk_sfn::types::LoggingConfiguration> for LoggingConfiguration {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct TracingConfiguration {
     pub enabled: bool,
 }
@@ -68,7 +68,7 @@ impl From<aws_sdk_sfn::types::TracingConfiguration> for TracingConfiguration {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct StateMachine {
     pub name: String,
