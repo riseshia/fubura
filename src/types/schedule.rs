@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use super::ResourceTag;
+
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct FlexibleTimeWindow {
@@ -109,26 +111,8 @@ impl From<aws_sdk_scheduler::types::PlacementStrategy> for PlacementStrategy {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct ScheduleTag {
-    pub key: String,
-    pub value: String,
-}
-
-impl From<std::collections::HashMap<::std::string::String, ::std::string::String>> for ScheduleTag {
-    fn from(
-        value: std::collections::HashMap<::std::string::String, ::std::string::String>,
-    ) -> Self {
-        ScheduleTag {
-            key: value.get("key").unwrap().to_string(),
-            value: value.get("value").unwrap().to_string(),
-        }
-    }
-}
-
 type PlacementConstraintList = Vec<PlacementConstraint>;
 type PlacementStrategyList = Vec<PlacementStrategy>;
-type ScheduleTagList = Vec<ScheduleTag>;
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -145,7 +129,7 @@ pub struct EcsParameters {
     pub platform_version: Option<String>,
     pub propagate_tags: Option<String>,
     pub reference_id: Option<String>,
-    pub tags: ScheduleTagList,
+    pub tags: Vec<ResourceTag>,
     pub task_count: Option<i32>,
 }
 
@@ -182,7 +166,7 @@ impl From<aws_sdk_scheduler::types::EcsParameters> for EcsParameters {
             tags: value
                 .tags()
                 .iter()
-                .map(|kv| ScheduleTag::from(kv.clone()))
+                .map(|kv| ResourceTag::from(kv.clone()))
                 .collect(),
             task_count: value.task_count(),
         }
