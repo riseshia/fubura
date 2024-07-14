@@ -1,3 +1,5 @@
+use super::{ResourceTag, Schedule, StateMachine};
+
 #[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
 pub enum DiffOp {
     CreateSfn,
@@ -5,7 +7,7 @@ pub enum DiffOp {
     UpdateSfn,
     UpdateSchedule,
     AddSfnTag,
-    RemoveSfnTag,
+    RemoveSfnTag(Vec<String>),
     DeleteSfn,
     DeleteSchedule,
     NoChangeSfn,

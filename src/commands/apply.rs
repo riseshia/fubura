@@ -67,7 +67,7 @@ Enter a value: "#
                     println!("Adding tags to state machine: {}", ss_config.state.name);
                     sfn::tag_resource(&context.sfn_client, &state_arn, &ss_config.state.tags).await;
                 }
-                DiffOp::RemoveSfnTag => {
+                DiffOp::RemoveSfnTag(_) => {
                     println!("Removing tags from state machine: {}", ss_config.state.name);
                     sfn::untag_resource(&context.sfn_client, &state_arn, &ss_config.state.tags)
                         .await;

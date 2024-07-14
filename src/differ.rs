@@ -150,7 +150,11 @@ fn build_sfn_tags_diff_ops(
 
     let removed_tag_keys: HashSet<_> = remote_tag_keys.difference(&local_tag_keys).collect();
     if !removed_tag_keys.is_empty() {
-        required_ops.insert(DiffOp::RemoveSfnTag);
+        let keys: Vec<String> = removed_tag_keys
+            .into_iter()
+            .map(|key| key.to_string())
+            .collect();
+        required_ops.insert(DiffOp::RemoveSfnTag(keys));
     }
 
     let retained_tag_keys: HashSet<_> = local_tag_keys.intersection(&remote_tag_keys).collect();
@@ -178,7 +182,7 @@ fn classify_diff_op(diff_op: &DiffOp) -> String {
         DiffOp::DeleteSfn => "delete",
         DiffOp::NoChangeSfn => "no change",
         DiffOp::AddSfnTag => "create",
-        DiffOp::RemoveSfnTag => "update",
+        DiffOp::RemoveSfnTag(_) => "update",
         DiffOp::NoChangeSfnTags => "no change",
         DiffOp::CreateSchedule => "create",
         DiffOp::UpdateSchedule => "update",
@@ -286,7 +290,10 @@ mod test {
 
         build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
 
-        assert_eq!(actual_ops, vec![DiffOp::RemoveSfnTag]);
+        assert_eq!(
+            actual_ops,
+            vec![DiffOp::RemoveSfnTag(vec!["key2".to_string()])]
+        );
     }
 
     #[test]
@@ -355,6 +362,12 @@ mod test {
         build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
         actual_ops.sort();
 
-        assert_eq!(actual_ops, vec![DiffOp::AddSfnTag, DiffOp::RemoveSfnTag]);
+        assert_eq!(
+            actual_ops,
+            vec![
+                DiffOp::AddSfnTag,
+                DiffOp::RemoveSfnTag(vec!["remote_only_key".to_string()])
+            ]
+        );
     }
 }
