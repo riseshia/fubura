@@ -18,15 +18,22 @@ async fn main() {
             force,
             config,
             ext_str,
+            target,
         } => {
             let config = Config::load_from_path(config, ext_str);
-            let context = Context::async_default().await;
+            let mut context = Context::async_default().await;
+            context.targets.clone_from(target);
 
             ApplyCommand::run(&context, force, &config).await;
         }
-        Commands::Plan { config, ext_str } => {
+        Commands::Plan {
+            config,
+            ext_str,
+            target,
+        } => {
             let config = Config::load_from_path(config, ext_str);
-            let context = Context::async_default().await;
+            let mut context = Context::async_default().await;
+            context.targets.clone_from(target);
 
             PlanCommand::run(&context, &config).await;
         }

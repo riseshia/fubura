@@ -10,7 +10,9 @@ impl ApplyCommand {
         let mut diff_ops_with_config = vec![];
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
 
-        for ss_config in config.ss_configs.iter() {
+        let target_ss_configs = config.target_ss_configs(&context.targets);
+
+        for ss_config in target_ss_configs {
             let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
 
             let remote_state =

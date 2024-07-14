@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{cli::StrKeyVal, jsonnet_evaluator};
@@ -17,5 +19,18 @@ impl Config {
         serde_json::from_value(config_value).unwrap_or_else(|e| {
             panic!("failed to parse config file with error: {}", e);
         })
+    }
+
+    pub fn target_ss_configs(&self, targets: &Option<Vec<String>>) -> Vec<&SsConfig> {
+        if let Some(targets) = &targets {
+            let targets = targets.iter().collect::<HashSet<_>>();
+
+            self.ss_configs
+                .iter()
+                .filter(|ss_config| targets.contains(&ss_config.state.name))
+                .collect::<Vec<_>>()
+        } else {
+            self.ss_configs.iter().collect::<Vec<_>>()
+        }
     }
 }

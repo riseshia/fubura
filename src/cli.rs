@@ -20,6 +20,8 @@ pub enum Commands {
         config: String,
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
+        #[clap(long = "target", short = 't', value_name = "key=[val]")]
+        target: Option<Vec<String>>,
     },
     /// plan config
     Plan {
@@ -28,6 +30,8 @@ pub enum Commands {
         config: String,
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
+        #[clap(long = "target", short = 't', value_name = "key=[val]")]
+        target: Option<Vec<String>>,
     },
     /// import state machine to specified config file
     Import {

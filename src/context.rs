@@ -7,6 +7,7 @@ pub struct Context {
     pub sfn_client: Sfn,
     pub sts_client: Sts,
     pub aws_region: String,
+    pub targets: Option<Vec<String>>,
 }
 
 impl Context {
@@ -26,6 +27,7 @@ impl Context {
             sfn_client,
             sts_client,
             aws_region,
+            targets: None,
         }
     }
 
@@ -40,6 +42,7 @@ impl Context {
             sfn_client: MockSfnImpl::default(),
             sts_client: MockStsImpl::default(),
             aws_region: "us-west-2".to_string(),
+            targets: None,
         }
     }
 }
