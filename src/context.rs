@@ -20,7 +20,10 @@ impl Context {
         let scheduler_client = Scheduler::new(aws_sdk_scheduler::Client::new(&aws_config));
         let sfn_client = Sfn::new(aws_sdk_sfn::Client::new(&aws_config));
         let sts_client = Sts::new(aws_sdk_sts::Client::new(&aws_config));
-        let aws_region = aws_config.region().unwrap().to_string();
+        let aws_region = aws_config
+            .region()
+            .unwrap_or_else(|| panic!("AWS region not set"))
+            .to_string();
 
         Self {
             scheduler_client,
