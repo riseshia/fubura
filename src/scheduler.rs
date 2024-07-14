@@ -2,9 +2,6 @@ use aws_sdk_scheduler as scheduler;
 use aws_sdk_scheduler::operation::create_schedule::{CreateScheduleError, CreateScheduleOutput};
 use aws_sdk_scheduler::operation::delete_schedule::{DeleteScheduleError, DeleteScheduleOutput};
 use aws_sdk_scheduler::operation::get_schedule::{GetScheduleError, GetScheduleOutput};
-use aws_sdk_scheduler::operation::list_tags_for_resource::{
-    ListTagsForResourceError, ListTagsForResourceOutput,
-};
 use aws_sdk_scheduler::operation::update_schedule::{UpdateScheduleError, UpdateScheduleOutput};
 
 #[allow(unused_imports)]
@@ -37,18 +34,6 @@ impl SchedulerImpl {
             .get_schedule()
             .group_name(group_name)
             .name(schedule_name)
-            .send()
-            .await
-    }
-
-    pub async fn list_tags_for_resource(
-        &self,
-        schedule_arn: &str,
-    ) -> Result<ListTagsForResourceOutput, scheduler::error::SdkError<ListTagsForResourceError>>
-    {
-        self.inner
-            .list_tags_for_resource()
-            .resource_arn(schedule_arn)
             .send()
             .await
     }
