@@ -60,9 +60,6 @@ Enter a value: "#
                     println!("Deleting state machine: {}", ss_config.state.name);
                     sfn::delete_state_machine(&context.sfn_client, &state_arn).await;
                 }
-                DiffOp::NoChangeSfn => {
-                    // Do nothing
-                }
                 DiffOp::AddSfnTag => {
                     println!("Adding tags to state machine: {}", ss_config.state.name);
                     sfn::tag_resource(&context.sfn_client, &state_arn, &ss_config.state.tags).await;
@@ -71,9 +68,6 @@ Enter a value: "#
                     println!("Removing tags from state machine: {}", ss_config.state.name);
                     sfn::untag_resource(&context.sfn_client, &state_arn, &ss_config.state.tags)
                         .await;
-                }
-                DiffOp::NoChangeSfnTags => {
-                    // Do nothing
                 }
                 DiffOp::CreateSchedule => {
                     println!(
@@ -107,9 +101,6 @@ Enter a value: "#
                         ss_config.schedule.as_ref().unwrap(),
                     )
                     .await;
-                }
-                DiffOp::NoChangeSchedule => {
-                    // Do nothing
                 }
             }
         }

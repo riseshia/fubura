@@ -84,13 +84,13 @@ pub fn build_diff_ops(
         if remote_state.is_some() {
             expected_ops.push(DiffOp::DeleteSfn);
         } else {
-            expected_ops.push(DiffOp::NoChangeSfn);
+            // No change
         }
     } else if let Some(remote_state) = remote_state {
         if local_state != remote_state {
             expected_ops.push(DiffOp::UpdateSfn);
         } else {
-            expected_ops.push(DiffOp::NoChangeSfn);
+            // No change
         }
     } else {
         expected_ops.push(DiffOp::CreateSfn);
@@ -109,16 +109,16 @@ pub fn build_diff_ops(
         if remote_schedule.is_some() {
             expected_ops.push(DiffOp::DeleteSchedule);
         } else {
-            expected_ops.push(DiffOp::NoChangeSchedule);
+            // No change
         }
     } else if local_schedule.is_none() {
-        expected_ops.push(DiffOp::NoChangeSchedule);
+        // No change
     } else {
         let local_schedule = local_schedule.unwrap();
 
         if let Some(remote_schedule) = remote_schedule {
             if local_schedule == remote_schedule {
-                expected_ops.push(DiffOp::NoChangeSchedule);
+                // No change
             } else {
                 expected_ops.push(DiffOp::UpdateSchedule);
             }
@@ -180,14 +180,11 @@ fn classify_diff_op(diff_op: &DiffOp) -> String {
         DiffOp::CreateSfn => "create",
         DiffOp::UpdateSfn => "update",
         DiffOp::DeleteSfn => "delete",
-        DiffOp::NoChangeSfn => "no change",
         DiffOp::AddSfnTag => "create",
         DiffOp::RemoveSfnTag(_) => "update",
-        DiffOp::NoChangeSfnTags => "no change",
         DiffOp::CreateSchedule => "create",
         DiffOp::UpdateSchedule => "update",
         DiffOp::DeleteSchedule => "delete",
-        DiffOp::NoChangeSchedule => "no change",
     }
     .to_string()
 }
