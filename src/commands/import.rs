@@ -1,4 +1,5 @@
 use crate::context::Context;
+use crate::types::{Config, SsConfig};
 use crate::{scheduler, sfn, sts};
 
 pub struct ImportCommand;
@@ -6,7 +7,8 @@ pub struct ImportCommand;
 impl ImportCommand {
     pub async fn run(
         context: &Context,
-        config: &str,
+        config_path: &str,
+        mut config: Config,
         sfn_name: &str,
         schedule_name_with_group: &Option<String>,
     ) {
@@ -23,21 +25,25 @@ impl ImportCommand {
                     .await
                     .unwrap_or_else(|| panic!("schedule not found: {}", state_arn));
 
-            Some(serde_json::to_value(schedule).unwrap())
+            Some(schedule)
         } else {
             None
         };
 
-        let full_config = serde_json::json!({
-            "schedule": scheduler_config,
-            "state": serde_json::to_value(&state_machine).unwrap(),
-        });
+        let ss_config = SsConfig {
+            state: state_machine,
+            schedule: scheduler_config,
+            delete_state: false,
+            delete_schedule: false,
+        };
 
-        std::fs::write(config, serde_json::to_string_pretty(&full_config).unwrap()).unwrap_or_else(
+        config.ss_configs.push(ss_config);
+
+        std::fs::write(config_path, serde_json::to_string_pretty(&config).unwrap()).unwrap_or_else(
             |e| {
                 panic!(
                     "failed to write config to file '{}' with error: {}",
-                    config, e
+                    config_path, e
                 )
             },
         );
@@ -148,6 +154,7 @@ mod test {
         ImportCommand::run(
             &context,
             imported_config_path,
+            Config::default(),
             "HelloWorld",
             &Some("default/HelloWorld".to_string()),
         )
@@ -160,49 +167,53 @@ mod test {
         similar_asserts::assert_eq!(
             v,
             serde_json::json!({
-                "state": {
-                    "name": "HelloWorld",
-                    "type": "STANDARD",
-                    "definition": "...",
-                    "description": null,
-                    "label": null,
-                    "loggingConfiguration": null,
-                    "tracingConfiguration": null,
-                    "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                    "revisionId": null,
-                    "status": null,
-                    "tags": [
-                        {
-                            "key": "Name",
-                            "value": "HelloWorld"
-                        }
-                    ]
-                },
-                "schedule": {
-                    "groupName": "default",
-                    "name": "HelloWorld",
-                    "description": "HellowWorld schedule",
-                    "endDate": null,
-                    "startDate": null,
-                    "flexibleTimeWindow": null,
-                    "kmsKeyArn": null,
-                    "scheduleExpression": "rate(1 minute)",
-                    "scheduleExpressionTimezone": "UTC",
-                    "state": "ENABLED",
-                    "target": {
-                        "arn": "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+                "ssConfigs": [{
+                    "state": {
+                        "name": "HelloWorld",
+                        "type": "STANDARD",
+                        "definition": "...",
+                        "description": null,
+                        "label": null,
+                        "loggingConfiguration": null,
+                        "tracingConfiguration": null,
                         "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                        "deadLetterConfig": null,
-                        "ecsParameters": null,
-                        "eventBridgeParameters": null,
-                        "input": null,
-                        "kinesisParameters": null,
-                        "retryPolicy": null,
-                        "sageMakerPipelineParameters": null,
-                        "sqsParameters": null,
+                        "revisionId": null,
+                        "status": null,
+                        "tags": [
+                            {
+                                "key": "Name",
+                                "value": "HelloWorld"
+                            }
+                        ]
                     },
+                    "schedule": {
+                        "groupName": "default",
+                        "name": "HelloWorld",
+                        "description": "HellowWorld schedule",
+                        "endDate": null,
+                        "startDate": null,
+                        "flexibleTimeWindow": null,
+                        "kmsKeyArn": null,
+                        "scheduleExpression": "rate(1 minute)",
+                        "scheduleExpressionTimezone": "UTC",
+                        "state": "ENABLED",
+                        "target": {
+                            "arn": "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+                            "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
+                            "deadLetterConfig": null,
+                            "ecsParameters": null,
+                            "eventBridgeParameters": null,
+                            "input": null,
+                            "kinesisParameters": null,
+                            "retryPolicy": null,
+                            "sageMakerPipelineParameters": null,
+                            "sqsParameters": null,
+                        },
+                    },
+                    "deleteState": false,
+                    "deleteSchedule": false,
                 }
-            })
+            ]})
         );
     }
 
@@ -264,7 +275,14 @@ mod test {
         let imported_config_path = "tmp/hello-world-without-schedule.jsonnet";
         std::fs::remove_file(imported_config_path).ok();
 
-        ImportCommand::run(&context, imported_config_path, "HelloWorld", &None).await;
+        ImportCommand::run(
+            &context,
+            imported_config_path,
+            Config::default(),
+            "HelloWorld",
+            &None,
+        )
+        .await;
 
         let config =
             std::fs::read_to_string(imported_config_path).expect("imported config not found");
@@ -273,26 +291,30 @@ mod test {
         similar_asserts::assert_eq!(
             v,
             serde_json::json!({
-                "state": {
-                    "name": "HelloWorld",
-                    "type": "STANDARD",
-                    "definition": "...",
-                    "description": null,
-                    "label": null,
-                    "loggingConfiguration": null,
-                    "tracingConfiguration": null,
-                    "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                    "revisionId": null,
-                    "status": null,
-                    "tags": [
-                        {
-                            "key": "Name",
-                            "value": "HelloWorld"
-                        }
-                    ]
-                },
-                "schedule": null,
-            })
+                "ssConfigs": [{
+                    "state": {
+                        "name": "HelloWorld",
+                        "type": "STANDARD",
+                        "definition": "...",
+                        "description": null,
+                        "label": null,
+                        "loggingConfiguration": null,
+                        "tracingConfiguration": null,
+                        "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
+                        "revisionId": null,
+                        "status": null,
+                        "tags": [
+                            {
+                                "key": "Name",
+                                "value": "HelloWorld"
+                            }
+                        ]
+                    },
+                    "schedule": null,
+                    "deleteState": false,
+                    "deleteSchedule": false,
+                }
+            ]})
         );
     }
 }

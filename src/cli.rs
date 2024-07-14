@@ -29,16 +29,18 @@ pub enum Commands {
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
     },
-    /// import state machine config
+    /// import state machine to specified config file
     Import {
         /// Where to import its config
         #[arg(
             short,
             long,
-            default_value = "imported-sfn-confg.jsonnet",
+            default_value = "fubura.jsonnet",
             value_name = "import-path"
         )]
         config: String,
+        #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
+        ext_str: Vec<StrKeyVal>,
         /// import target state machine arn
         #[arg(long = "sfn-name", short = 'f', value_name = "state-machine-name")]
         sfn_name: String,

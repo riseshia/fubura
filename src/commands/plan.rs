@@ -1,32 +1,35 @@
 use crate::context::Context;
 use crate::differ::{build_diff_ops, print_config_diff, print_diff_ops};
-use crate::types::SsConfig;
+use crate::types::Config;
 use crate::{scheduler, sfn, sts};
 
 pub struct PlanCommand;
 
 impl PlanCommand {
-    pub async fn run(context: &Context, config: &SsConfig) {
+    pub async fn run(context: &Context, config: &Config) {
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
-        let state_arn = format!("{}{}", state_arn_prefix, config.state.name);
 
-        let remote_state =
-            sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
+        for ss_config in &config.ss_configs {
+            let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
 
-        let remote_schedule = if let Some(schedule_config) = &config.schedule {
-            scheduler::get_schedule(
-                &context.scheduler_client,
-                &schedule_config.schedule_name_with_group(),
-            )
-            .await
-        } else {
-            None
-        };
+            let remote_state =
+                sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
 
-        print_config_diff(config, &remote_state, &remote_schedule);
-        let diff_ops = build_diff_ops(config, &remote_state, &remote_schedule);
+            let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
+                scheduler::get_schedule(
+                    &context.scheduler_client,
+                    &schedule_config.schedule_name_with_group(),
+                )
+                .await
+            } else {
+                None
+            };
 
-        print_diff_ops(&diff_ops);
+            print_config_diff(ss_config, &remote_state, &remote_schedule);
+            let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
+
+            print_diff_ops(&diff_ops);
+        }
     }
 }
 
@@ -127,51 +130,53 @@ mod test {
             });
 
         let ss_config_json = serde_json::json!({
-            "state": {
-                "name": "HelloWorld",
-                "type": "STANDARD",
-                "definition": "...",
-                "description": null,
-                "label": null,
-                "loggingConfiguration": null,
-                "tracingConfiguration": null,
-                "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                "revisionId": null,
-                "status": null,
-                "tags": [
-                    {
-                        "key": "Name",
-                        "value": "HelloWorld"
-                    }
-                ]
-            },
-            "schedule": {
-                "groupName": "default",
-                "name": "HelloWorld",
-                "description": "HellowWorld schedule",
-                "endDate": null,
-                "startDate": null,
-                "flexibleTimeWindow": null,
-                "kmsKeyArn": null,
-                "scheduleExpression": "rate(1 minute)",
-                "scheduleExpressionTimezone": "UTC",
-                "state": "ENABLED",
-                "target": {
-                    "arn": "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            "ssConfigs": [{
+                "state": {
+                    "name": "HelloWorld",
+                    "type": "STANDARD",
+                    "definition": "...",
+                    "description": null,
+                    "label": null,
+                    "loggingConfiguration": null,
+                    "tracingConfiguration": null,
                     "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                    "deadLetterConfig": null,
-                    "ecsParameters": null,
-                    "eventBridgeParameters": null,
-                    "input": null,
-                    "kinesisParameters": null,
-                    "retryPolicy": null,
-                    "sageMakerPipelineParameters": null,
-                    "sqsParameters": null,
+                    "revisionId": null,
+                    "status": null,
+                    "tags": [
+                        {
+                            "key": "Name",
+                            "value": "HelloWorld"
+                        }
+                    ]
                 },
-            }
+                "schedule": {
+                    "groupName": "default",
+                    "name": "HelloWorld",
+                    "description": "HellowWorld schedule",
+                    "endDate": null,
+                    "startDate": null,
+                    "flexibleTimeWindow": null,
+                    "kmsKeyArn": null,
+                    "scheduleExpression": "rate(1 minute)",
+                    "scheduleExpressionTimezone": "UTC",
+                    "state": "ENABLED",
+                    "target": {
+                        "arn": "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+                        "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
+                        "deadLetterConfig": null,
+                        "ecsParameters": null,
+                        "eventBridgeParameters": null,
+                        "input": null,
+                        "kinesisParameters": null,
+                        "retryPolicy": null,
+                        "sageMakerPipelineParameters": null,
+                        "sqsParameters": null,
+                    },
+                }
+            }]
         });
-        let ss_config: SsConfig = serde_json::from_value(ss_config_json).unwrap();
+        let config: Config = serde_json::from_value(ss_config_json).unwrap();
 
-        PlanCommand::run(&context, &ss_config).await;
+        PlanCommand::run(&context, &config).await;
     }
 }
