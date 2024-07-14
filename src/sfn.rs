@@ -123,6 +123,32 @@ impl SfnImpl {
             .send()
             .await
     }
+
+    pub async fn tag_resource(
+        &self,
+        tags: &[ResourceTag],
+    ) -> Result<TagResourceOutput, sfn::error::SdkError<TagResourceError>> {
+        let mut builder = self.inner.tag_resource();
+
+        for tag in tags {
+            builder = builder.tags(tag.clone().into());
+        }
+
+        builder.send().await
+    }
+
+    pub async fn untag_resource(
+        &self,
+        tags: &[ResourceTag],
+    ) -> Result<UntagResourceOutput, sfn::error::SdkError<UntagResourceError>> {
+        let mut builder = self.inner.untag_resource();
+
+        for tag in tags {
+            builder = builder.tag_keys(tag.key.clone());
+        }
+
+        builder.send().await
+    }
 }
 
 pub async fn create_state_machine(
