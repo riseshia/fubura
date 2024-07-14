@@ -52,6 +52,41 @@ impl SchedulerImpl {
             .send()
             .await
     }
+
+    pub async fn create_schedule(
+        &self,
+        schedule: &Schedule,
+    ) -> Result<CreateScheduleOutput, scheduler::error::SdkError<CreateScheduleError>> {
+        self.inner
+            .create_schedule()
+            .group_name(&schedule.group_name)
+            .name(&schedule.name)
+            .set_description(schedule.description.clone())
+            .state(schedule.state.clone().into())
+            .schedule_expression(schedule.schedule_expression.clone())
+            .set_schedule_expression_timezone(schedule.schedule_expression_timezone.clone())
+            .set_start_date(schedule.start_date)
+            .set_end_date(schedule.end_date)
+            .set_flexible_time_window(schedule.flexible_time_window.clone().map(|v| v.into()))
+            .set_kms_key_arn(schedule.kms_key_arn.clone())
+            .target(schedule.target.clone().into())
+            .send()
+            .await
+    }
+
+    pub async fn update_schedule(
+        &self,
+        _client: &Scheduler,
+    ) -> Result<UpdateScheduleOutput, scheduler::error::SdkError<UpdateScheduleError>> {
+        todo!()
+    }
+
+    pub async fn delete_schedule(
+        &self,
+        _client: &Scheduler,
+    ) -> Result<DeleteScheduleOutput, scheduler::error::SdkError<DeleteScheduleError>> {
+        todo!()
+    }
 }
 
 pub async fn create_schedule(

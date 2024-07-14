@@ -115,6 +115,7 @@ mod test {
                     .description("HellowWorld schedule")
                     .schedule_expression("rate(1 minute)")
                     .schedule_expression_timezone("UTC")
+                    .state(aws_sdk_scheduler::types::ScheduleState::Enabled)
                     .target(
                         TargetBuilder::default()
                             .arn("arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld")
@@ -154,6 +155,7 @@ mod test {
                 "kmsKeyArn": null,
                 "scheduleExpression": "rate(1 minute)",
                 "scheduleExpressionTimezone": "UTC",
+                "state": "ENABLED",
                 "target": {
                     "arn": "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
                     "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",

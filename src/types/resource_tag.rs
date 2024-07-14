@@ -26,11 +26,21 @@ impl From<aws_sdk_sfn::types::Tag> for ResourceTag {
     }
 }
 
-impl Into<aws_sdk_sfn::types::Tag> for ResourceTag {
-    fn into(self) -> aws_sdk_sfn::types::Tag {
+impl From<ResourceTag> for aws_sdk_sfn::types::Tag {
+    fn from(value: ResourceTag) -> Self {
         aws_sdk_sfn::types::builders::TagBuilder::default()
-            .key(self.key)
-            .value(self.value)
+            .key(value.key)
+            .value(value.value)
             .build()
+    }
+}
+
+impl From<ResourceTag> for aws_sdk_scheduler::types::Tag {
+    fn from(value: ResourceTag) -> Self {
+        aws_sdk_scheduler::types::builders::TagBuilder::default()
+            .key(value.key)
+            .value(value.value)
+            .build()
+            .unwrap()
     }
 }
