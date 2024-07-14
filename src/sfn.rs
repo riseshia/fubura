@@ -41,11 +41,11 @@ impl SfnImpl {
     #[allow(dead_code)]
     pub async fn describe_state_machine(
         &self,
-        sfn_arn: &str,
+        state_arn: &str,
     ) -> Result<DescribeStateMachineOutput, sfn::error::SdkError<DescribeStateMachineError>> {
         self.inner
             .describe_state_machine()
-            .state_machine_arn(sfn_arn)
+            .state_machine_arn(state_arn)
             .send()
             .await
     }
@@ -53,11 +53,11 @@ impl SfnImpl {
     #[allow(dead_code)]
     pub async fn list_tags_for_resource(
         &self,
-        sfn_arn: &str,
+        state_arn: &str,
     ) -> Result<ListTagsForResourceOutput, sfn::error::SdkError<ListTagsForResourceError>> {
         self.inner
             .list_tags_for_resource()
-            .resource_arn(sfn_arn)
+            .resource_arn(state_arn)
             .send()
             .await
     }
@@ -169,8 +169,8 @@ pub async fn delete_state_machine(
     todo!()
 }
 
-async fn list_tags_for_resource(client: &Sfn, sfn_arn: &str) -> Vec<ResourceTag> {
-    let res = client.list_tags_for_resource(sfn_arn).await;
+async fn list_tags_for_resource(client: &Sfn, state_arn: &str) -> Vec<ResourceTag> {
+    let res = client.list_tags_for_resource(state_arn).await;
 
     match res {
         Ok(output) => {
@@ -182,7 +182,7 @@ async fn list_tags_for_resource(client: &Sfn, sfn_arn: &str) -> Vec<ResourceTag>
         Err(err) => {
             panic!(
                 "failed to list tags for resource({}) with error: {}",
-                sfn_arn, err
+                state_arn, err
             );
         }
     }
@@ -200,12 +200,15 @@ pub async fn untag_resource(
     todo!()
 }
 
-pub async fn describe_state_machine_with_tags(client: &Sfn, sfn_arn: &str) -> Option<StateMachine> {
-    let res = client.describe_state_machine(sfn_arn).await;
+pub async fn describe_state_machine_with_tags(
+    client: &Sfn,
+    state_arn: &str,
+) -> Option<StateMachine> {
+    let res = client.describe_state_machine(state_arn).await;
 
     match res {
         Ok(output) => {
-            let tags = list_tags_for_resource(client, sfn_arn).await;
+            let tags = list_tags_for_resource(client, state_arn).await;
             let mut sfn = StateMachine::from(output);
             sfn.tags = tags;
 

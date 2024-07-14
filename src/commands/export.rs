@@ -10,18 +10,18 @@ impl ExportCommand {
         sfn_name: &str,
         schedule_name_with_group: &Option<String>,
     ) {
-        let sfn_arn_prefix = sts::build_sfn_arn_prefix(context).await;
-        let sfn_arn = format!("{}{}", sfn_arn_prefix, sfn_name);
+        let state_arn_prefix = sts::build_state_arn_prefix(context).await;
+        let state_arn = format!("{}{}", state_arn_prefix, sfn_name);
 
-        let state_machine = sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn)
+        let state_machine = sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn)
             .await
-            .unwrap_or_else(|| panic!("state machine not found: {}", sfn_arn));
+            .unwrap_or_else(|| panic!("state machine not found: {}", state_arn));
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
             let schedule =
                 scheduler::get_schedule(&context.scheduler_client, schedule_name_with_group)
                     .await
-                    .unwrap_or_else(|| panic!("schedule not found: {}", sfn_arn));
+                    .unwrap_or_else(|| panic!("schedule not found: {}", state_arn));
 
             Some(serde_json::to_value(schedule).unwrap())
         } else {

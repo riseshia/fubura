@@ -7,11 +7,11 @@ pub struct ApplyCommand;
 
 impl ApplyCommand {
     pub async fn run(context: &Context, force: &bool, config: &SsConfig) {
-        let sfn_arn_prefix = sts::build_sfn_arn_prefix(context).await;
-        let sfn_arn = format!("{}{}", sfn_arn_prefix, config.state.name);
+        let state_arn_prefix = sts::build_state_arn_prefix(context).await;
+        let state_arn = format!("{}{}", state_arn_prefix, config.state.name);
 
         let remote_state =
-            sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn).await;
+            sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
 
         let remote_schedule = if let Some(schedule_config) = &config.schedule {
             scheduler::get_schedule(

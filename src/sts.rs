@@ -44,7 +44,7 @@ async fn get_caller_identity(client: &Sts) -> CallerIdentity {
     }
 }
 
-pub async fn build_sfn_arn_prefix(context: &Context) -> String {
+pub async fn build_state_arn_prefix(context: &Context) -> String {
     let caller_identity = get_caller_identity(&context.sts_client).await;
     let account_id = caller_identity.account;
     let aws_region = &context.aws_region;
