@@ -88,6 +88,30 @@ impl SfnImpl {
 
         builder.send().await
     }
+
+    pub async fn update_state_machine(
+        &self,
+        state_arn: &str,
+        state: &StateMachine,
+    ) -> Result<UpdateStateMachineOutput, sfn::error::SdkError<UpdateStateMachineError>> {
+        let mut builder = self
+            .inner
+            .update_state_machine()
+            .state_machine_arn(state_arn)
+            .definition(&state.definition)
+            .role_arn(&state.role_arn);
+
+        if let Some(logging_configuration) = &state.logging_configuration {
+            builder = builder.logging_configuration(logging_configuration.clone().into());
+        }
+        if let Some(tracing_configuration) = &state.tracing_configuration {
+            builder = builder.tracing_configuration(tracing_configuration.clone().into());
+        }
+
+        // XXX: Handle publish and version_description some day?
+
+        builder.send().await
+    }
 }
 
 pub async fn create_state_machine(
