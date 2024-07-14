@@ -79,7 +79,7 @@ mod test {
                     )
                     .name("HelloWorld".to_string())
                     .r#type(StateMachineType::Standard)
-                    .definition("...".to_string())
+                    .definition("{ \"StartAt\": \"FirstState\" }".to_string())
                     .role_arn(
                         "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
                     )
@@ -136,7 +136,9 @@ mod test {
                 "state": {
                     "name": "HelloWorld",
                     "type": "STANDARD",
-                    "definition": "...",
+                    "definition": {
+                        "StartAt": "FirstState"
+                    },
                     "description": null,
                     "label": null,
                     "loggingConfiguration": null,

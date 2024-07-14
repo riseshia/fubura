@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use super::ResourceTag;
 
@@ -191,7 +192,7 @@ impl From<StateMachineType> for aws_sdk_sfn::types::StateMachineType {
 pub struct StateMachine {
     pub name: String,
     pub status: Option<String>,
-    pub definition: String,
+    pub definition: Value,
     pub role_arn: String,
     pub r#type: StateMachineType,
     pub logging_configuration: Option<LoggingConfiguration>,
@@ -211,7 +212,7 @@ impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOu
         StateMachine {
             name: value.name().to_string(),
             status: value.status().map(|s| s.to_string()),
-            definition: value.definition().to_string(),
+            definition: serde_json::from_str(value.definition()).unwrap(),
             role_arn: value.role_arn().to_string(),
             r#type: StateMachineType::from(value.r#type().clone()),
             logging_configuration: value
