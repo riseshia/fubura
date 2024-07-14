@@ -141,12 +141,12 @@ impl SfnImpl {
     pub async fn untag_resource(
         &self,
         state_arn: &str,
-        tags: &[ResourceTag],
+        tags: &[String],
     ) -> Result<UntagResourceOutput, sfn::error::SdkError<UntagResourceError>> {
         let mut builder = self.inner.untag_resource().resource_arn(state_arn);
 
         for tag in tags {
-            builder = builder.tag_keys(tag.key.clone());
+            builder = builder.tag_keys(tag);
         }
 
         builder.send().await
@@ -217,7 +217,7 @@ pub async fn tag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) {
         });
 }
 
-pub async fn untag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) {
+pub async fn untag_resource(client: &Sfn, state_arn: &str, tags: &[String]) {
     client
         .untag_resource(state_arn, tags)
         .await

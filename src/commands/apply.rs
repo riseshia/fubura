@@ -1,33 +1,58 @@
 use crate::context::Context;
 use crate::differ::{build_diff_ops, print_config_diff, print_diff_ops};
-use crate::types::{Config, DiffOp};
+use crate::types::{Config, DiffOp, DiffOpWithTarget};
 use crate::{scheduler, sfn, sts};
 
 pub struct ApplyCommand;
 
 impl ApplyCommand {
     pub async fn run(context: &Context, force: &bool, config: &Config) {
-        let ss_config = config.ss_configs.first().unwrap();
-
+        let mut diff_ops_with_config = vec![];
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
-        let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
 
-        let remote_state =
-            sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
+        for ss_config in config.ss_configs.iter() {
+            let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
 
-        let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
-            scheduler::get_schedule(
-                &context.scheduler_client,
-                &schedule_config.schedule_name_with_group(),
-            )
-            .await
-        } else {
-            None
-        };
+            let remote_state =
+                sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
 
-        print_config_diff(ss_config, &remote_state, &remote_schedule);
-        let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
-        print_diff_ops(&diff_ops);
+            let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
+                scheduler::get_schedule(
+                    &context.scheduler_client,
+                    &schedule_config.schedule_name_with_group(),
+                )
+                .await
+            } else {
+                None
+            };
+
+            print_config_diff(ss_config, &remote_state, &remote_schedule);
+            let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
+            print_diff_ops(&diff_ops);
+
+            for diff_op in diff_ops {
+                let op_with_config = match diff_op {
+                    DiffOp::CreateSfn => DiffOpWithTarget::CreateSfn(&ss_config.state),
+                    DiffOp::UpdateSfn => DiffOpWithTarget::UpdateSfn(&ss_config.state),
+                    DiffOp::DeleteSfn => DiffOpWithTarget::DeleteSfn(&ss_config.state),
+                    DiffOp::AddSfnTag => DiffOpWithTarget::AddSfnTag(&ss_config.state),
+                    DiffOp::RemoveSfnTag(tags) => {
+                        DiffOpWithTarget::RemoveSfnTag(&ss_config.state, tags)
+                    }
+                    DiffOp::CreateSchedule => {
+                        DiffOpWithTarget::CreateSchedule(ss_config.schedule.as_ref().unwrap())
+                    }
+                    DiffOp::UpdateSchedule => {
+                        DiffOpWithTarget::UpdateSchedule(ss_config.schedule.as_ref().unwrap())
+                    }
+                    DiffOp::DeleteSchedule => {
+                        DiffOpWithTarget::DeleteSchedule(ss_config.schedule.as_ref().unwrap())
+                    }
+                };
+
+                diff_ops_with_config.push(op_with_config);
+            }
+        }
 
         if !force {
             print!(
@@ -45,62 +70,43 @@ Enter a value: "#
             }
         }
 
-        for diff_op in diff_ops {
-            match diff_op {
-                DiffOp::CreateSfn => {
-                    println!("Creating state machine: {}", ss_config.state.name);
-                    sfn::create_state_machine(&context.sfn_client, &ss_config.state).await;
+        for diff_op_with_config in diff_ops_with_config.iter() {
+            match diff_op_with_config {
+                DiffOpWithTarget::CreateSfn(state) => {
+                    println!("Creating state machine: {}", state.name);
+                    sfn::create_state_machine(&context.sfn_client, state).await;
                 }
-                DiffOp::UpdateSfn => {
-                    println!("Updating state machine: {}", ss_config.state.name);
-                    sfn::update_state_machine(&context.sfn_client, &state_arn, &ss_config.state)
-                        .await;
+                DiffOpWithTarget::UpdateSfn(state) => {
+                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                    println!("Updating state machine: {}", state.name);
+                    sfn::update_state_machine(&context.sfn_client, &state_arn, state).await;
                 }
-                DiffOp::DeleteSfn => {
-                    println!("Deleting state machine: {}", ss_config.state.name);
+                DiffOpWithTarget::DeleteSfn(state) => {
+                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                    println!("Deleting state machine: {}", state.name);
                     sfn::delete_state_machine(&context.sfn_client, &state_arn).await;
                 }
-                DiffOp::AddSfnTag => {
-                    println!("Adding tags to state machine: {}", ss_config.state.name);
-                    sfn::tag_resource(&context.sfn_client, &state_arn, &ss_config.state.tags).await;
+                DiffOpWithTarget::AddSfnTag(state) => {
+                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                    println!("Adding tags to state machine: {}", state.name);
+                    sfn::tag_resource(&context.sfn_client, &state_arn, &state.tags).await;
                 }
-                DiffOp::RemoveSfnTag(_) => {
-                    println!("Removing tags from state machine: {}", ss_config.state.name);
-                    sfn::untag_resource(&context.sfn_client, &state_arn, &ss_config.state.tags)
-                        .await;
+                DiffOpWithTarget::RemoveSfnTag(state, removed_keys) => {
+                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                    println!("Removing tags from state machine: {}", state.name);
+                    sfn::untag_resource(&context.sfn_client, &state_arn, removed_keys).await;
                 }
-                DiffOp::CreateSchedule => {
-                    println!(
-                        "Creating schedule: {}",
-                        ss_config.schedule.as_ref().unwrap().name
-                    );
-                    scheduler::create_schedule(
-                        &context.scheduler_client,
-                        ss_config.schedule.as_ref().unwrap(),
-                    )
-                    .await;
+                DiffOpWithTarget::CreateSchedule(schedule) => {
+                    println!("Creating schedule: {}", schedule.name);
+                    scheduler::create_schedule(&context.scheduler_client, schedule).await;
                 }
-                DiffOp::UpdateSchedule => {
-                    println!(
-                        "Updating schedule: {}",
-                        ss_config.schedule.as_ref().unwrap().name
-                    );
-                    scheduler::update_schedule(
-                        &context.scheduler_client,
-                        ss_config.schedule.as_ref().unwrap(),
-                    )
-                    .await;
+                DiffOpWithTarget::UpdateSchedule(schedule) => {
+                    println!("Updating schedule: {}", schedule.name);
+                    scheduler::update_schedule(&context.scheduler_client, schedule).await;
                 }
-                DiffOp::DeleteSchedule => {
-                    println!(
-                        "Deleting schedule: {}",
-                        ss_config.schedule.as_ref().unwrap().name
-                    );
-                    scheduler::delete_schedule(
-                        &context.scheduler_client,
-                        ss_config.schedule.as_ref().unwrap(),
-                    )
-                    .await;
+                DiffOpWithTarget::DeleteSchedule(schedule) => {
+                    println!("Deleting schedule: {}", schedule.name);
+                    scheduler::delete_schedule(&context.scheduler_client, schedule).await;
                 }
             }
         }
