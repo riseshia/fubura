@@ -61,6 +61,33 @@ impl SfnImpl {
             .send()
             .await
     }
+
+    pub async fn create_state_machine(
+        &self,
+        sfn: &StateMachine,
+    ) -> Result<CreateStateMachineOutput, sfn::error::SdkError<CreateStateMachineError>> {
+        let mut builder = self
+            .inner
+            .create_state_machine()
+            .name(&sfn.name)
+            .definition(&sfn.definition)
+            .role_arn(&sfn.role_arn)
+            .r#type(sfn.r#type.into());
+
+        if let Some(logging_configuration) = &sfn.logging_configuration {
+            builder = builder.logging_configuration(logging_configuration.clone().into());
+        }
+        if let Some(tracing_configuration) = &sfn.tracing_configuration {
+            builder = builder.tracing_configuration(tracing_configuration.clone().into());
+        }
+        for tag in &sfn.tags {
+            builder = builder.tags(tag.clone().into());
+        }
+
+        // XXX: Handle publish and version_description some day?
+
+        builder.send().await
+    }
 }
 
 pub async fn create_state_machine(

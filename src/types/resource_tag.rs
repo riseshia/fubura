@@ -25,3 +25,12 @@ impl From<aws_sdk_sfn::types::Tag> for ResourceTag {
         }
     }
 }
+
+impl Into<aws_sdk_sfn::types::Tag> for ResourceTag {
+    fn into(self) -> aws_sdk_sfn::types::Tag {
+        aws_sdk_sfn::types::builders::TagBuilder::default()
+            .key(self.key)
+            .value(self.value)
+            .build()
+    }
+}
