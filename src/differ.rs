@@ -15,17 +15,17 @@ fn print_resource_diff(remote: &str, local: &str) {
 
 pub fn print_config_diff(
     local_config: &SsConfig,
-    remote_sfn: &Option<StateMachine>,
+    remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
 ) {
-    let remote_sfn_json_string = serde_json::to_string_pretty(&remote_sfn).unwrap();
-    let local_sfn_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
+    let remote_state_json_string = serde_json::to_string_pretty(&remote_state).unwrap();
+    let local_state_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
 
     let mut has_no_diff = true;
 
-    if local_sfn_json_string != remote_sfn_json_string {
+    if local_state_json_string != remote_state_json_string {
         has_no_diff = false;
-        print_resource_diff(&remote_sfn_json_string, &local_sfn_json_string);
+        print_resource_diff(&remote_state_json_string, &local_state_json_string);
     }
 
     if let Some(local_schedule) = &local_config.schedule {
@@ -68,26 +68,26 @@ fn split_sfn_and_tags(sfn: Option<StateMachine>) -> (Option<StateMachine>, Vec<R
 
 pub fn build_diff_ops(
     local_config: &SsConfig,
-    remote_sfn: &Option<StateMachine>,
+    remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
 ) -> Vec<DiffOp> {
     let mut expected_ops = vec![];
 
-    let local_sfn = local_config.state.clone();
-    let remote_sfn = remote_sfn.clone();
+    let local_state = local_config.state.clone();
+    let remote_state = remote_state.clone();
 
-    let (local_sfn, local_sfn_tags) = split_sfn_and_tags(Some(local_sfn));
-    let local_sfn = local_sfn.unwrap();
-    let (remote_sfn, remote_sfn_tags) = split_sfn_and_tags(remote_sfn);
+    let (local_state, local_state_tags) = split_sfn_and_tags(Some(local_state));
+    let local_state = local_state.unwrap();
+    let (remote_state, remote_state_tags) = split_sfn_and_tags(remote_state);
 
     if local_config.delete_state {
-        if remote_sfn.is_some() {
+        if remote_state.is_some() {
             expected_ops.push(DiffOp::DeleteSfn);
         } else {
             expected_ops.push(DiffOp::NoChangeSfn);
         }
-    } else if let Some(remote_sfn) = remote_sfn {
-        if local_sfn != remote_sfn {
+    } else if let Some(remote_state) = remote_state {
+        if local_state != remote_state {
             expected_ops.push(DiffOp::UpdateSfn);
         } else {
             expected_ops.push(DiffOp::NoChangeSfn);
@@ -96,7 +96,7 @@ pub fn build_diff_ops(
         expected_ops.push(DiffOp::CreateSfn);
     }
 
-    build_sfn_tags_diff_ops(&local_sfn_tags, &remote_sfn_tags, &mut expected_ops);
+    build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags, &mut expected_ops);
 
     let local_schedule = local_config.schedule.clone();
     let remote_schedule = remote_schedule.clone();
@@ -131,17 +131,17 @@ pub fn build_diff_ops(
 }
 
 fn build_sfn_tags_diff_ops(
-    local_sfn_tags: &[ResourceTag],
-    remote_sfn_tags: &[ResourceTag],
+    local_state_tags: &[ResourceTag],
+    remote_state_tags: &[ResourceTag],
     expected_ops: &mut Vec<DiffOp>,
 ) {
     let mut required_ops: HashSet<DiffOp> = HashSet::from([]);
-    if local_sfn_tags == remote_sfn_tags {
+    if local_state_tags == remote_state_tags {
         return;
     }
 
-    let local_tag_keys: HashSet<&String> = local_sfn_tags.iter().map(|tag| &tag.key).collect();
-    let remote_tag_keys: HashSet<&String> = remote_sfn_tags.iter().map(|tag| &tag.key).collect();
+    let local_tag_keys: HashSet<&String> = local_state_tags.iter().map(|tag| &tag.key).collect();
+    let remote_tag_keys: HashSet<&String> = remote_state_tags.iter().map(|tag| &tag.key).collect();
 
     let added_tag_keys: HashSet<_> = local_tag_keys.difference(&remote_tag_keys).collect();
     if !added_tag_keys.is_empty() {
@@ -154,11 +154,11 @@ fn build_sfn_tags_diff_ops(
     }
 
     let retained_tag_keys: HashSet<_> = local_tag_keys.intersection(&remote_tag_keys).collect();
-    let local_retained_tags: Vec<_> = local_sfn_tags
+    let local_retained_tags: Vec<_> = local_state_tags
         .iter()
         .filter(|tag| retained_tag_keys.contains(&&tag.key))
         .collect();
-    let remote_retained_tags: Vec<_> = remote_sfn_tags
+    let remote_retained_tags: Vec<_> = remote_state_tags
         .iter()
         .filter(|tag| retained_tag_keys.contains(&&tag.key))
         .collect();

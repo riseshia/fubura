@@ -10,7 +10,8 @@ impl PlanCommand {
         let sfn_arn_prefix = sts::build_sfn_arn_prefix(context).await;
         let sfn_arn = format!("{}{}", sfn_arn_prefix, config.state.name);
 
-        let remote_sfn = sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn).await;
+        let remote_state =
+            sfn::describe_state_machine_with_tags(&context.sfn_client, &sfn_arn).await;
 
         let remote_schedule = if let Some(schedule_config) = &config.schedule {
             scheduler::get_schedule(
@@ -22,8 +23,8 @@ impl PlanCommand {
             None
         };
 
-        print_config_diff(config, &remote_sfn, &remote_schedule);
-        let diff_ops = build_diff_ops(config, &remote_sfn, &remote_schedule);
+        print_config_diff(config, &remote_state, &remote_schedule);
+        let diff_ops = build_diff_ops(config, &remote_state, &remote_schedule);
 
         print_diff_ops(&diff_ops);
     }
