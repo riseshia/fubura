@@ -353,6 +353,7 @@ mod test {
         ];
 
         build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
+        actual_ops.sort();
 
         assert_eq!(actual_ops, vec![DiffOp::AddSfnTag, DiffOp::RemoveSfnTag]);
     }
