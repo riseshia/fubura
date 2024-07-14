@@ -69,13 +69,40 @@ impl From<aws_sdk_sfn::types::TracingConfiguration> for TracingConfiguration {
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+pub enum StateMachineType {
+    #[serde(rename = "STANDARD")]
+    Standard,
+    #[serde(rename = "EXPRESS")]
+    Express,
+}
+
+impl From<aws_sdk_sfn::types::StateMachineType> for StateMachineType {
+    fn from(value: aws_sdk_sfn::types::StateMachineType) -> Self {
+        match value {
+            aws_sdk_sfn::types::StateMachineType::Standard => StateMachineType::Standard,
+            aws_sdk_sfn::types::StateMachineType::Express => StateMachineType::Express,
+            _ => panic!("unknown state machine type: {:?}", value),
+        }
+    }
+}
+
+impl Into<aws_sdk_sfn::types::StateMachineType> for StateMachineType {
+    fn into(self) -> aws_sdk_sfn::types::StateMachineType {
+        match self {
+            StateMachineType::Standard => aws_sdk_sfn::types::StateMachineType::Standard,
+            StateMachineType::Express => aws_sdk_sfn::types::StateMachineType::Express,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StateMachine {
     pub name: String,
     pub status: Option<String>,
     pub definition: String,
     pub role_arn: String,
-    pub r#type: String,
+    pub r#type: StateMachineType,
     pub logging_configuration: Option<LoggingConfiguration>,
     pub tracing_configuration: Option<TracingConfiguration>,
     pub label: Option<String>,
@@ -95,7 +122,7 @@ impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOu
             status: value.status().map(|s| s.to_string()),
             definition: value.definition().to_string(),
             role_arn: value.role_arn().to_string(),
-            r#type: value.r#type().to_string(),
+            r#type: StateMachineType::from(value.r#type().clone()),
             logging_configuration: value
                 .logging_configuration()
                 .map(|lc| LoggingConfiguration::from(lc.clone())),
