@@ -126,9 +126,10 @@ impl SfnImpl {
 
     pub async fn tag_resource(
         &self,
+        state_arn: &str,
         tags: &[ResourceTag],
     ) -> Result<TagResourceOutput, sfn::error::SdkError<TagResourceError>> {
-        let mut builder = self.inner.tag_resource();
+        let mut builder = self.inner.tag_resource().resource_arn(state_arn);
 
         for tag in tags {
             builder = builder.tags(tag.clone().into());
@@ -139,9 +140,10 @@ impl SfnImpl {
 
     pub async fn untag_resource(
         &self,
+        state_arn: &str,
         tags: &[ResourceTag],
     ) -> Result<UntagResourceOutput, sfn::error::SdkError<UntagResourceError>> {
-        let mut builder = self.inner.untag_resource();
+        let mut builder = self.inner.untag_resource().resource_arn(state_arn);
 
         for tag in tags {
             builder = builder.tag_keys(tag.key.clone());
@@ -151,22 +153,40 @@ impl SfnImpl {
     }
 }
 
-pub async fn create_state_machine(
-    _client: &Sfn,
-) -> Result<CreateStateMachineOutput, sfn::error::SdkError<CreateStateMachineError>> {
-    todo!()
+pub async fn create_state_machine(client: &Sfn, state: &StateMachine) {
+    client
+        .create_state_machine(state)
+        .await
+        .unwrap_or_else(|e| {
+            panic!(
+                "failed to create state machine({}) with error: {}",
+                state.name, e
+            );
+        });
 }
 
-pub async fn update_state_machine(
-    _client: &Sfn,
-) -> Result<UpdateStateMachineOutput, sfn::error::SdkError<UpdateStateMachineError>> {
-    todo!()
+pub async fn update_state_machine(client: &Sfn, state_arn: &str, state: &StateMachine) {
+    client
+        .update_state_machine(state_arn, state)
+        .await
+        .unwrap_or_else(|e| {
+            panic!(
+                "failed to update state machine({}) with error: {}",
+                state.name, e
+            );
+        });
 }
 
-pub async fn delete_state_machine(
-    _client: &Sfn,
-) -> Result<DeleteStateMachineOutput, sfn::error::SdkError<DeleteStateMachineError>> {
-    todo!()
+pub async fn delete_state_machine(client: &Sfn, state_arn: &str) {
+    client
+        .delete_state_machine(state_arn)
+        .await
+        .unwrap_or_else(|e| {
+            panic!(
+                "failed to delete state machine({}) with error: {}",
+                state_arn, e
+            );
+        });
 }
 
 async fn list_tags_for_resource(client: &Sfn, state_arn: &str) -> Vec<ResourceTag> {
@@ -188,16 +208,22 @@ async fn list_tags_for_resource(client: &Sfn, state_arn: &str) -> Vec<ResourceTa
     }
 }
 
-pub async fn tag_resource(
-    _client: &Sfn,
-) -> Result<TagResourceOutput, sfn::error::SdkError<TagResourceError>> {
-    todo!()
+pub async fn tag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) {
+    client
+        .tag_resource(state_arn, tags)
+        .await
+        .unwrap_or_else(|e| {
+            panic!("failed to tag resource with error: {}", e);
+        });
 }
 
-pub async fn untag_resource(
-    _client: &Sfn,
-) -> Result<UntagResourceOutput, sfn::error::SdkError<UntagResourceError>> {
-    todo!()
+pub async fn untag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) {
+    client
+        .untag_resource(state_arn, tags)
+        .await
+        .unwrap_or_else(|e| {
+            panic!("failed to untag resource with error: {}", e);
+        });
 }
 
 pub async fn describe_state_machine_with_tags(

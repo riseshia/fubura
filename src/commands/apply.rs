@@ -1,6 +1,6 @@
 use crate::context::Context;
 use crate::differ::{build_diff_ops, print_config_diff, print_diff_ops};
-use crate::types::SsConfig;
+use crate::types::{DiffOp, SsConfig};
 use crate::{scheduler, sfn, sts};
 
 pub struct ApplyCommand;
@@ -43,6 +43,71 @@ Enter a value: "#
             }
         }
 
-        println!("apply called with {:?}!", config)
+        for diff_op in diff_ops {
+            match diff_op {
+                DiffOp::CreateSfn => {
+                    println!("Creating state machine: {}", config.state.name);
+                    sfn::create_state_machine(&context.sfn_client, &config.state).await;
+                }
+                DiffOp::UpdateSfn => {
+                    println!("Updating state machine: {}", config.state.name);
+                    sfn::update_state_machine(&context.sfn_client, &state_arn, &config.state).await;
+                }
+                DiffOp::DeleteSfn => {
+                    println!("Deleting state machine: {}", config.state.name);
+                    sfn::delete_state_machine(&context.sfn_client, &state_arn).await;
+                }
+                DiffOp::NoChangeSfn => {
+                    // Do nothing
+                }
+                DiffOp::AddSfnTag => {
+                    println!("Adding tags to state machine: {}", config.state.name);
+                    sfn::tag_resource(&context.sfn_client, &state_arn, &config.state.tags).await;
+                }
+                DiffOp::RemoveSfnTag => {
+                    println!("Removing tags from state machine: {}", config.state.name);
+                    sfn::untag_resource(&context.sfn_client, &state_arn, &config.state.tags).await;
+                }
+                DiffOp::NoChangeSfnTags => {
+                    // Do nothing
+                }
+                DiffOp::CreateSchedule => {
+                    println!(
+                        "Creating schedule: {}",
+                        config.schedule.as_ref().unwrap().name
+                    );
+                    scheduler::create_schedule(
+                        &context.scheduler_client,
+                        config.schedule.as_ref().unwrap(),
+                    )
+                    .await;
+                }
+                DiffOp::UpdateSchedule => {
+                    println!(
+                        "Updating schedule: {}",
+                        config.schedule.as_ref().unwrap().name
+                    );
+                    scheduler::update_schedule(
+                        &context.scheduler_client,
+                        config.schedule.as_ref().unwrap(),
+                    )
+                    .await;
+                }
+                DiffOp::DeleteSchedule => {
+                    println!(
+                        "Deleting schedule: {}",
+                        config.schedule.as_ref().unwrap().name
+                    );
+                    scheduler::delete_schedule(
+                        &context.scheduler_client,
+                        config.schedule.as_ref().unwrap(),
+                    )
+                    .await;
+                }
+                DiffOp::NoChangeSchedule => {
+                    // Do nothing
+                }
+            }
+        }
     }
 }

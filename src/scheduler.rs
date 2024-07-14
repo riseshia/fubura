@@ -82,34 +82,36 @@ impl SchedulerImpl {
 
     pub async fn delete_schedule(
         &self,
-        group_name: &str,
-        name: &str,
+        schedule: &Schedule,
     ) -> Result<DeleteScheduleOutput, scheduler::error::SdkError<DeleteScheduleError>> {
         self.inner
             .delete_schedule()
-            .group_name(group_name)
-            .name(name)
+            .group_name(&schedule.group_name)
+            .name(&schedule.name)
             .send()
             .await
     }
 }
 
-pub async fn create_schedule(
-    _client: &Scheduler,
-) -> Result<CreateScheduleOutput, scheduler::error::SdkError<CreateScheduleError>> {
-    todo!()
+pub async fn create_schedule(client: &Scheduler, schedule: &Schedule) {
+    client.create_schedule(schedule).await.unwrap_or_else(|e| {
+        panic!(
+            "failed to create schedule({}) with error: {}",
+            schedule.name, e
+        );
+    });
 }
 
-pub async fn update_schedule(
-    _client: &Scheduler,
-) -> Result<UpdateScheduleOutput, scheduler::error::SdkError<UpdateScheduleError>> {
-    todo!()
+pub async fn update_schedule(client: &Scheduler, schedule: &Schedule) {
+    client.update_schedule(schedule).await.unwrap_or_else(|e| {
+        panic!("failed to update schedule with error: {}", e);
+    });
 }
 
-pub async fn delete_schedule(
-    _client: &Scheduler,
-) -> Result<DeleteScheduleOutput, scheduler::error::SdkError<DeleteScheduleError>> {
-    todo!()
+pub async fn delete_schedule(client: &Scheduler, schedule: &Schedule) {
+    client.delete_schedule(schedule).await.unwrap_or_else(|e| {
+        panic!("failed to delete schedule with error: {}", e);
+    });
 }
 
 pub async fn get_schedule(client: &Scheduler, schedule_name_with_group: &str) -> Option<Schedule> {
