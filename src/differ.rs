@@ -171,6 +171,42 @@ fn build_sfn_tags_diff_ops(
     }
 }
 
+fn classify_diff_op(diff_op: &DiffOp) -> String {
+    match diff_op {
+        DiffOp::CreateSfn => "create",
+        DiffOp::UpdateSfn => "update",
+        DiffOp::DeleteSfn => "delete",
+        DiffOp::NoChangeSfn => "no change",
+        DiffOp::AddSfnTag => "create",
+        DiffOp::RemoveSfnTag => "update",
+        DiffOp::NoChangeSfnTags => "no change",
+        DiffOp::CreateSchedule => "create",
+        DiffOp::UpdateSchedule => "update",
+        DiffOp::DeleteSchedule => "delete",
+        DiffOp::NoChangeSchedule => "no change",
+    }
+    .to_string()
+}
+
+pub fn print_diff_ops(diff_ops: &[DiffOp]) {
+    if diff_ops.is_empty() {
+        println!("no difference");
+        return;
+    }
+
+    let mut op_counts = std::collections::HashMap::new();
+    for op in diff_ops.iter() {
+        let class = classify_diff_op(op);
+        let count = op_counts.entry(class).or_insert(0);
+        *count += 1;
+    }
+
+    println!("diff ops:");
+    for (op, count) in op_counts.iter() {
+        println!("{:?}: {}", op, count);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
