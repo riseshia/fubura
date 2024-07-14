@@ -40,7 +40,7 @@ Usage: fubura <COMMAND>
 Commands:
   apply   apply config
   plan    plan config
-  export  export state machine config
+  import  import state machine config
   help    Print this message or the help of the given subcommand(s)
 
 Options:

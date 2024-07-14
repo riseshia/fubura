@@ -29,20 +29,20 @@ pub enum Commands {
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
     },
-    /// export state machine config
-    Export {
-        /// Where to export its config
+    /// import state machine config
+    Import {
+        /// Where to import its config
         #[arg(
             short,
             long,
-            default_value = "exported-sfn-confg.jsonnet",
-            value_name = "export-path"
+            default_value = "imported-sfn-confg.jsonnet",
+            value_name = "import-path"
         )]
         config: String,
-        /// export target state machine arn
+        /// import target state machine arn
         #[arg(long = "sfn-name", short = 'f', value_name = "state-machine-name")]
         sfn_name: String,
-        /// export target scheduler name with group (optional)
+        /// import target scheduler name with group (optional)
         #[arg(
             long = "scheduler-name-with-group",
             short = 's',

@@ -1,9 +1,9 @@
 use crate::context::Context;
 use crate::{scheduler, sfn, sts};
 
-pub struct ExportCommand;
+pub struct ImportCommand;
 
-impl ExportCommand {
+impl ImportCommand {
     pub async fn run(
         context: &Context,
         config: &str,
@@ -142,20 +142,20 @@ mod test {
                     .build())
             });
 
-        let exported_config_path = "tmp/hello-world.jsonnet";
-        std::fs::remove_file(exported_config_path).ok();
+        let imported_config_path = "tmp/hello-world.jsonnet";
+        std::fs::remove_file(imported_config_path).ok();
 
-        ExportCommand::run(
+        ImportCommand::run(
             &context,
-            exported_config_path,
+            imported_config_path,
             "HelloWorld",
             &Some("default/HelloWorld".to_string()),
         )
         .await;
 
         let config =
-            std::fs::read_to_string(exported_config_path).expect("exported config not found");
-        let v: Value = serde_json::from_str(&config).expect("exported config is not valid json");
+            std::fs::read_to_string(imported_config_path).expect("imported config not found");
+        let v: Value = serde_json::from_str(&config).expect("imported config is not valid json");
 
         similar_asserts::assert_eq!(
             v,
@@ -261,14 +261,14 @@ mod test {
                     .build())
             });
 
-        let exported_config_path = "tmp/hello-world-without-schedule.jsonnet";
-        std::fs::remove_file(exported_config_path).ok();
+        let imported_config_path = "tmp/hello-world-without-schedule.jsonnet";
+        std::fs::remove_file(imported_config_path).ok();
 
-        ExportCommand::run(&context, exported_config_path, "HelloWorld", &None).await;
+        ImportCommand::run(&context, imported_config_path, "HelloWorld", &None).await;
 
         let config =
-            std::fs::read_to_string(exported_config_path).expect("exported config not found");
-        let v: Value = serde_json::from_str(&config).expect("exported config is not valid json");
+            std::fs::read_to_string(imported_config_path).expect("imported config not found");
+        let v: Value = serde_json::from_str(&config).expect("imported config is not valid json");
 
         similar_asserts::assert_eq!(
             v,

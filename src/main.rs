@@ -2,7 +2,7 @@ use clap::Parser;
 
 use fubura::cli::{Cli, Commands, StrKeyVal};
 use fubura::commands::apply::ApplyCommand;
-use fubura::commands::export::ExportCommand;
+use fubura::commands::import::ImportCommand;
 use fubura::commands::plan::PlanCommand;
 use fubura::context::Context;
 use fubura::jsonnet_evaluator;
@@ -37,14 +37,14 @@ async fn main() {
 
             PlanCommand::run(&context, &ss_config).await;
         }
-        Commands::Export {
+        Commands::Import {
             config,
             sfn_name,
             schedule_name_with_group,
         } => {
             let context = Context::async_default().await;
 
-            ExportCommand::run(&context, config, sfn_name, schedule_name_with_group).await;
+            ImportCommand::run(&context, config, sfn_name, schedule_name_with_group).await;
         }
     }
 }
