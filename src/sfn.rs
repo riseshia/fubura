@@ -112,6 +112,17 @@ impl SfnImpl {
 
         builder.send().await
     }
+
+    pub async fn delete_state_machine(
+        &self,
+        state_arn: &str,
+    ) -> Result<DeleteStateMachineOutput, sfn::error::SdkError<DeleteStateMachineError>> {
+        self.inner
+            .delete_state_machine()
+            .state_machine_arn(state_arn)
+            .send()
+            .await
+    }
 }
 
 pub async fn create_state_machine(
