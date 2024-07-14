@@ -32,12 +32,12 @@ impl ApplyCommand {
 
             for diff_op in diff_ops {
                 let op_with_config = match diff_op {
-                    DiffOp::CreateSfn => DiffOpWithTarget::CreateSfn(&ss_config.state),
-                    DiffOp::UpdateSfn => DiffOpWithTarget::UpdateSfn(&ss_config.state),
-                    DiffOp::DeleteSfn => DiffOpWithTarget::DeleteSfn(&ss_config.state),
-                    DiffOp::AddSfnTag => DiffOpWithTarget::AddSfnTag(&ss_config.state),
-                    DiffOp::RemoveSfnTag(tags) => {
-                        DiffOpWithTarget::RemoveSfnTag(&ss_config.state, tags)
+                    DiffOp::CreateState => DiffOpWithTarget::CreateState(&ss_config.state),
+                    DiffOp::UpdateState => DiffOpWithTarget::UpdateState(&ss_config.state),
+                    DiffOp::DeleteState => DiffOpWithTarget::DeleteState(&ss_config.state),
+                    DiffOp::AddStateTag => DiffOpWithTarget::AddStateTag(&ss_config.state),
+                    DiffOp::RemoteStateTag(tags) => {
+                        DiffOpWithTarget::RemoteStateTag(&ss_config.state, tags)
                     }
                     DiffOp::CreateSchedule => {
                         DiffOpWithTarget::CreateSchedule(ss_config.schedule.as_ref().unwrap())
@@ -72,26 +72,26 @@ Enter a value: "#
 
         for diff_op_with_config in diff_ops_with_config.iter() {
             match diff_op_with_config {
-                DiffOpWithTarget::CreateSfn(state) => {
+                DiffOpWithTarget::CreateState(state) => {
                     println!("Creating state machine: {}", state.name);
                     sfn::create_state_machine(&context.sfn_client, state).await;
                 }
-                DiffOpWithTarget::UpdateSfn(state) => {
+                DiffOpWithTarget::UpdateState(state) => {
                     let state_arn = format!("{}{}", state_arn_prefix, state.name);
                     println!("Updating state machine: {}", state.name);
                     sfn::update_state_machine(&context.sfn_client, &state_arn, state).await;
                 }
-                DiffOpWithTarget::DeleteSfn(state) => {
+                DiffOpWithTarget::DeleteState(state) => {
                     let state_arn = format!("{}{}", state_arn_prefix, state.name);
                     println!("Deleting state machine: {}", state.name);
                     sfn::delete_state_machine(&context.sfn_client, &state_arn).await;
                 }
-                DiffOpWithTarget::AddSfnTag(state) => {
+                DiffOpWithTarget::AddStateTag(state) => {
                     let state_arn = format!("{}{}", state_arn_prefix, state.name);
                     println!("Adding tags to state machine: {}", state.name);
                     sfn::tag_resource(&context.sfn_client, &state_arn, &state.tags).await;
                 }
-                DiffOpWithTarget::RemoveSfnTag(state, removed_keys) => {
+                DiffOpWithTarget::RemoteStateTag(state, removed_keys) => {
                     let state_arn = format!("{}{}", state_arn_prefix, state.name);
                     println!("Removing tags from state machine: {}", state.name);
                     sfn::untag_resource(&context.sfn_client, &state_arn, removed_keys).await;

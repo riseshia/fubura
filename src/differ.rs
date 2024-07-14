@@ -82,18 +82,18 @@ pub fn build_diff_ops(
 
     if local_config.delete_state {
         if remote_state.is_some() {
-            expected_ops.push(DiffOp::DeleteSfn);
+            expected_ops.push(DiffOp::DeleteState);
         } else {
             // No change
         }
     } else if let Some(remote_state) = remote_state {
         if local_state != remote_state {
-            expected_ops.push(DiffOp::UpdateSfn);
+            expected_ops.push(DiffOp::UpdateState);
         } else {
             // No change
         }
     } else {
-        expected_ops.push(DiffOp::CreateSfn);
+        expected_ops.push(DiffOp::CreateState);
     }
 
     build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags, &mut expected_ops);
@@ -145,7 +145,7 @@ fn build_sfn_tags_diff_ops(
 
     let added_tag_keys: HashSet<_> = local_tag_keys.difference(&remote_tag_keys).collect();
     if !added_tag_keys.is_empty() {
-        required_ops.insert(DiffOp::AddSfnTag);
+        required_ops.insert(DiffOp::AddStateTag);
     }
 
     let removed_tag_keys: HashSet<_> = remote_tag_keys.difference(&local_tag_keys).collect();
@@ -154,7 +154,7 @@ fn build_sfn_tags_diff_ops(
             .into_iter()
             .map(|key| key.to_string())
             .collect();
-        required_ops.insert(DiffOp::RemoveSfnTag(keys));
+        required_ops.insert(DiffOp::RemoteStateTag(keys));
     }
 
     let retained_tag_keys: HashSet<_> = local_tag_keys.intersection(&remote_tag_keys).collect();
@@ -167,7 +167,7 @@ fn build_sfn_tags_diff_ops(
         .filter(|tag| retained_tag_keys.contains(&&tag.key))
         .collect();
     if local_retained_tags != remote_retained_tags {
-        required_ops.insert(DiffOp::AddSfnTag);
+        required_ops.insert(DiffOp::AddStateTag);
     }
 
     for op in required_ops {
@@ -177,11 +177,11 @@ fn build_sfn_tags_diff_ops(
 
 fn classify_diff_op(diff_op: &DiffOp) -> String {
     match diff_op {
-        DiffOp::CreateSfn => "create",
-        DiffOp::UpdateSfn => "update",
-        DiffOp::DeleteSfn => "delete",
-        DiffOp::AddSfnTag => "create",
-        DiffOp::RemoveSfnTag(_) => "update",
+        DiffOp::CreateState => "create",
+        DiffOp::UpdateState => "update",
+        DiffOp::DeleteState => "delete",
+        DiffOp::AddStateTag => "create",
+        DiffOp::RemoteStateTag(_) => "update",
         DiffOp::CreateSchedule => "create",
         DiffOp::UpdateSchedule => "update",
         DiffOp::DeleteSchedule => "delete",
@@ -263,7 +263,7 @@ mod test {
 
         build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
 
-        assert_eq!(actual_ops, vec![DiffOp::AddSfnTag]);
+        assert_eq!(actual_ops, vec![DiffOp::AddStateTag]);
     }
 
     #[test]
@@ -289,7 +289,7 @@ mod test {
 
         assert_eq!(
             actual_ops,
-            vec![DiffOp::RemoveSfnTag(vec!["key2".to_string()])]
+            vec![DiffOp::RemoteStateTag(vec!["key2".to_string()])]
         );
     }
 
@@ -320,7 +320,7 @@ mod test {
 
         build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
 
-        assert_eq!(actual_ops, vec![DiffOp::AddSfnTag]);
+        assert_eq!(actual_ops, vec![DiffOp::AddStateTag]);
     }
 
     #[test]
@@ -362,8 +362,8 @@ mod test {
         assert_eq!(
             actual_ops,
             vec![
-                DiffOp::AddSfnTag,
-                DiffOp::RemoveSfnTag(vec!["remote_only_key".to_string()])
+                DiffOp::AddStateTag,
+                DiffOp::RemoteStateTag(vec!["remote_only_key".to_string()])
             ]
         );
     }
