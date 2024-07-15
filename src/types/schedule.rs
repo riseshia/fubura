@@ -740,8 +740,10 @@ pub struct Schedule {
     pub schedule_expression: String,
     pub schedule_expression_timezone: Option<String>,
     #[serde(with = "datetime_format_as_aws_dt")]
+    #[serde(default = "default_date")]
     pub start_date: Option<DateTime>,
     #[serde(with = "datetime_format_as_aws_dt")]
+    #[serde(default = "default_date")]
     pub end_date: Option<DateTime>,
     pub flexible_time_window: Option<FlexibleTimeWindow>,
     pub kms_key_arn: Option<String>,
@@ -752,6 +754,10 @@ impl Schedule {
     pub fn schedule_name_with_group(&self) -> String {
         format!("{}/{}", self.group_name, self.name)
     }
+}
+
+fn default_date() -> Option<DateTime> {
+    None
 }
 
 fn default_group_name() -> String {
