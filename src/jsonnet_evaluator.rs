@@ -35,7 +35,6 @@ pub fn eval(file_path: &str, ext_str: &[StrKeyVal]) -> Result<Value, String> {
     };
 
     let json: Value = serde_json::from_str(&json_str).unwrap();
-    println!("{}", json);
 
     Ok(json)
 }
