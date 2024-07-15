@@ -117,7 +117,9 @@ pub fn build_diff_ops(
         expected_ops.push(DiffOp::CreateState);
     }
 
-    build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags, &mut expected_ops);
+    if !expected_ops.contains(&DiffOp::DeleteState) {
+        build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags, &mut expected_ops);
+    }
 
     let local_schedule = local_config.schedule.clone();
     let remote_schedule = remote_schedule.clone();
