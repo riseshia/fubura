@@ -212,7 +212,7 @@ mod test {
                             "sqsParameters": null,
                         },
                     },
-                    "deleteState": false,
+                    "deleteAll": false,
                     "deleteSchedule": false,
                 }
             ]})
@@ -315,7 +315,7 @@ mod test {
                         ]
                     },
                     "schedule": null,
-                    "deleteState": false,
+                    "deleteAll": false,
                     "deleteSchedule": false,
                 }
             ]})
