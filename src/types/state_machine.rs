@@ -198,7 +198,6 @@ pub struct StateMachine {
     pub logging_configuration: Option<LoggingConfiguration>,
     pub tracing_configuration: Option<TracingConfiguration>,
     pub label: Option<String>,
-    pub revision_id: Option<String>,
     pub description: Option<String>,
     pub tags: Vec<ResourceTag>,
 }
@@ -222,7 +221,6 @@ impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOu
                 .tracing_configuration()
                 .map(|tc| TracingConfiguration::from(tc.clone())),
             label: value.label().map(|l| l.to_string()),
-            revision_id: value.revision_id().map(|ri| ri.to_string()),
             description: value.description().map(|d| d.to_string()),
             tags: vec![],
         }
