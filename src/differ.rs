@@ -17,40 +17,60 @@ pub fn print_config_diff(
     local_config: &SsConfig,
     remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
+    diff_ops: &[DiffOp],
 ) {
-    let remote_state_json_string = serde_json::to_string_pretty(&remote_state).unwrap();
-    let local_state_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
+    let mut change_state = false;
+    let mut delete_state = false;
+    let mut change_schedule = false;
+    let mut delete_schedule = false;
 
-    let mut has_no_diff = true;
-
-    if local_state_json_string != remote_state_json_string {
-        has_no_diff = false;
-        print_resource_diff(&remote_state_json_string, &local_state_json_string);
-    }
-
-    if let Some(local_schedule) = &local_config.schedule {
-        let local_schedule_json_string = serde_json::to_string_pretty(&local_schedule).unwrap();
-
-        match remote_schedule {
-            Some(remote_schedule) => {
-                let remote_schedule_json_string =
-                    serde_json::to_string_pretty(&remote_schedule).unwrap();
-
-                if remote_schedule_json_string != local_schedule_json_string {
-                    has_no_diff = false;
-                    print_resource_diff(&remote_schedule_json_string, &local_schedule_json_string);
-                }
+    for op in diff_ops {
+        match op {
+            DiffOp::CreateState
+            | DiffOp::UpdateState
+            | DiffOp::AddStateTag
+            | DiffOp::RemoteStateTag(_) => {
+                change_state = true;
             }
-            None => {
-                print_resource_diff("null", &local_schedule_json_string);
+            DiffOp::DeleteState => {
+                delete_state = true;
+            }
+            DiffOp::CreateSchedule | DiffOp::UpdateSchedule => {
+                change_schedule = true;
+            }
+            DiffOp::DeleteSchedule => {
+                delete_schedule = true;
             }
         }
-    } else {
-        todo!("no local schedule & remote schedule exists/not exists case");
     }
 
-    if has_no_diff {
+    if !change_state && !change_schedule && !delete_state && !delete_schedule {
         println!("no difference");
+        return;
+    }
+
+    if change_state {
+        let remote_state_json_string = serde_json::to_string_pretty(&remote_state).unwrap();
+        let local_state_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
+
+        print_resource_diff(&remote_state_json_string, &local_state_json_string);
+    } else if delete_state {
+        let local_state_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
+
+        print_resource_diff("null", &local_state_json_string);
+    }
+
+    if change_schedule {
+        let remote_schedule_json_string = serde_json::to_string_pretty(&remote_schedule).unwrap();
+        let local_schedule_json_string =
+            serde_json::to_string_pretty(&local_config.schedule).unwrap();
+
+        print_resource_diff(&remote_schedule_json_string, &local_schedule_json_string);
+    } else if delete_schedule {
+        let local_schedule_json_string =
+            serde_json::to_string_pretty(&local_config.schedule).unwrap();
+
+        print_resource_diff("null", &local_schedule_json_string);
     }
 }
 

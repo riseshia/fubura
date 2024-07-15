@@ -28,8 +28,8 @@ impl ApplyCommand {
                 None
             };
 
-            print_config_diff(ss_config, &remote_state, &remote_schedule);
             let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
+            print_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
             print_diff_ops(&diff_ops);
 
             for diff_op in diff_ops {
