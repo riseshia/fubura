@@ -1,16 +1,29 @@
 use std::collections::HashSet;
 
-use similar::TextDiff;
+use console::Style;
+use similar::{ChangeTag, TextDiff};
 
 use crate::types::{DiffOp, ResourceTag, Schedule, SsConfig, StateMachine};
 
-fn print_resource_diff(remote: &str, local: &str) {
+fn print_resource_diff(target: &str, remote: &str, local: &str) {
+    let remote_name = format!("{} (remote)", target);
+    let local_name = format!("{} (local)", target);
+
     let diff = TextDiff::from_lines(remote, local);
 
-    diff.unified_diff()
-        .header("remote", "local")
-        .to_writer(std::io::stdout())
-        .unwrap();
+    for hunk in diff.unified_diff().missing_newline_hint(true).iter_hunks() {
+        println!("--- {}", &remote_name);
+        println!("+++ {}", &local_name);
+
+        for change in hunk.iter_changes() {
+            let (sign, style) = match change.tag() {
+                ChangeTag::Insert => ("+", Style::new().green()),
+                ChangeTag::Equal => (" ", Style::new()),
+                ChangeTag::Delete => ("-", Style::new().red()),
+            };
+            print!("{}{}", style.apply_to(sign).bold(), style.apply_to(change));
+        }
+    }
 }
 
 pub fn print_config_diff(
@@ -49,11 +62,16 @@ pub fn print_config_diff(
         return;
     }
 
+    let target_state_id = local_config.state.name.as_str();
     if change_state {
         let remote_state_json_string = serde_json::to_string_pretty(&remote_state).unwrap();
         let local_state_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
 
-        print_resource_diff(&remote_state_json_string, &local_state_json_string);
+        print_resource_diff(
+            target_state_id,
+            &remote_state_json_string,
+            &local_state_json_string,
+        );
     } else if delete_state {
         println!(
             "remote state machine({}) is going to be deleted",
@@ -62,11 +80,16 @@ pub fn print_config_diff(
     }
 
     if change_schedule {
+        let target_schedule_name = local_config.schedule.as_ref().unwrap().name.as_str();
         let remote_schedule_json_string = serde_json::to_string_pretty(&remote_schedule).unwrap();
         let local_schedule_json_string =
             serde_json::to_string_pretty(&local_config.schedule).unwrap();
 
-        print_resource_diff(&remote_schedule_json_string, &local_schedule_json_string);
+        print_resource_diff(
+            target_schedule_name,
+            &remote_schedule_json_string,
+            &local_schedule_json_string,
+        );
     } else if delete_schedule {
         println!(
             "remote schedule({}) is going to be deleted",

@@ -575,6 +575,7 @@ dependencies = [
  "encode_unicode",
  "lazy_static",
  "libc",
+ "unicode-width",
  "windows-sys 0.52.0",
 ]
 
@@ -693,6 +694,7 @@ dependencies = [
  "aws-sdk-sfn",
  "aws-sdk-sts",
  "clap",
+ "console",
  "mockall",
  "rsjsonnet-front",
  "rsjsonnet-lang",
