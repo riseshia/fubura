@@ -223,14 +223,14 @@ fn build_sfn_tags_diff_ops(
 
 fn classify_diff_op(diff_op: &DiffOp) -> String {
     match diff_op {
-        DiffOp::CreateState => "create",
-        DiffOp::UpdateState => "update",
-        DiffOp::DeleteState => "delete",
-        DiffOp::AddStateTag => "create",
-        DiffOp::RemoteStateTag(_) => "update",
-        DiffOp::CreateSchedule => "create",
-        DiffOp::UpdateSchedule => "update",
-        DiffOp::DeleteSchedule => "delete",
+        DiffOp::CreateState => "create_state",
+        DiffOp::UpdateState => "update_state",
+        DiffOp::DeleteState => "delete_state",
+        DiffOp::AddStateTag => "update_state",
+        DiffOp::RemoteStateTag(_) => "update_state",
+        DiffOp::CreateSchedule => "create_schedule",
+        DiffOp::UpdateSchedule => "update_schedule",
+        DiffOp::DeleteSchedule => "delete_schedule",
     }
     .to_string()
 }
@@ -241,16 +241,15 @@ pub fn print_diff_ops(diff_ops: &[DiffOp]) {
         return;
     }
 
-    let mut op_counts = std::collections::HashMap::new();
+    let mut op_counts = std::collections::HashSet::new();
     for op in diff_ops.iter() {
         let class = classify_diff_op(op);
-        let count = op_counts.entry(class).or_insert(0);
-        *count += 1;
+        op_counts.insert(class);
     }
 
     println!("diff ops:");
-    for (op, count) in op_counts.iter() {
-        println!("{:?}: {}", op, count);
+    for op in op_counts.iter() {
+        println!("{}: 1", op);
     }
 }
 
