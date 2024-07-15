@@ -221,7 +221,7 @@ fn build_sfn_tags_diff_ops(
     }
 }
 
-fn classify_diff_op(diff_op: &DiffOp) -> String {
+pub fn classify_diff_op(diff_op: &DiffOp) -> String {
     match diff_op {
         DiffOp::CreateState => "create_state",
         DiffOp::UpdateState => "update_state",

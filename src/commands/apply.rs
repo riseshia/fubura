@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::differ::{build_diff_ops, print_config_diff, print_diff_ops};
+use crate::differ::{build_diff_ops, classify_diff_op, print_config_diff};
 use crate::types::{Config, DiffOp, DiffOpWithTarget};
 use crate::{scheduler, sfn, sts};
 
@@ -8,6 +8,8 @@ pub struct ApplyCommand;
 impl ApplyCommand {
     pub async fn run(context: &Context, force: &bool, config: &Config) {
         let mut diff_ops_with_config = vec![];
+        let mut op_counts = std::collections::HashMap::new();
+
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
 
         let target_ss_configs = config.target_ss_configs(&context.targets);
@@ -30,7 +32,10 @@ impl ApplyCommand {
 
             let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
             print_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
-            print_diff_ops(&diff_ops);
+            for op in diff_ops.iter() {
+                let class = classify_diff_op(op);
+                *op_counts.entry(class).or_insert(0) += 1;
+            }
 
             for diff_op in diff_ops {
                 let op_with_config = match diff_op {
@@ -54,6 +59,11 @@ impl ApplyCommand {
 
                 diff_ops_with_config.push(op_with_config);
             }
+        }
+
+        println!("\nFubura will:");
+        for (op, count) in op_counts.iter() {
+            println!("    {}: {}", op, count);
         }
 
         if !force {
