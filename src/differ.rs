@@ -99,7 +99,7 @@ pub fn build_diff_ops(
     let local_state = local_state.unwrap();
     let (remote_state, remote_state_tags) = split_sfn_and_tags(remote_state);
 
-    if local_config.delete_state {
+    if local_config.delete_all {
         if remote_state.is_some() {
             expected_ops.push(DiffOp::DeleteState);
         } else {
@@ -120,9 +120,9 @@ pub fn build_diff_ops(
     let local_schedule = local_config.schedule.clone();
     let remote_schedule = remote_schedule.clone();
 
-    if local_config.delete_schedule {
+    if local_config.delete_all || local_config.delete_schedule {
         if local_schedule.is_none() {
-            panic!("delete_schedule flag is on, but can't identify schedule since schedule config is not exist.");
+            panic!("delete schedule flag(deleteAll or deleteSchedule) is on, but can't identify schedule since schedule config is not exist.");
         }
 
         if remote_schedule.is_some() {

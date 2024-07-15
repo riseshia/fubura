@@ -12,7 +12,7 @@ pub struct SsConfig {
     pub state: StateMachine,
     pub schedule: Option<Schedule>,
     #[serde(default = "default_delete_flag")]
-    pub delete_state: bool,
+    pub delete_all: bool,
     #[serde(default = "default_delete_flag")]
     pub delete_schedule: bool,
 }

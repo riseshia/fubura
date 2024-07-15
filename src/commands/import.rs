@@ -33,7 +33,7 @@ impl ImportCommand {
         let ss_config = SsConfig {
             state: state_machine,
             schedule: scheduler_config,
-            delete_state: false,
+            delete_all: false,
             delete_schedule: false,
         };
 
