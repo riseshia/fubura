@@ -55,9 +55,10 @@ pub fn print_config_diff(
 
         print_resource_diff(&remote_state_json_string, &local_state_json_string);
     } else if delete_state {
-        let remote_state_json_string = serde_json::to_string_pretty(&remote_state).unwrap();
-
-        print_resource_diff(&remote_state_json_string, "null");
+        println!(
+            "remote state machine({}) is going to be deleted",
+            remote_state.as_ref().unwrap().name
+        );
     }
 
     if change_schedule {
@@ -67,9 +68,10 @@ pub fn print_config_diff(
 
         print_resource_diff(&remote_schedule_json_string, &local_schedule_json_string);
     } else if delete_schedule {
-        let remote_schedule_json_string = serde_json::to_string_pretty(&remote_schedule).unwrap();
-
-        print_resource_diff(&remote_schedule_json_string, "null");
+        println!(
+            "remote schedule({}) is going to be deleted",
+            remote_schedule.as_ref().unwrap().name
+        );
     }
 }
 
