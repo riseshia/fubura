@@ -55,9 +55,9 @@ pub fn print_config_diff(
 
         print_resource_diff(&remote_state_json_string, &local_state_json_string);
     } else if delete_state {
-        let local_state_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
+        let remote_state_json_string = serde_json::to_string_pretty(&remote_state).unwrap();
 
-        print_resource_diff("null", &local_state_json_string);
+        print_resource_diff(&remote_state_json_string, "null");
     }
 
     if change_schedule {
@@ -67,10 +67,9 @@ pub fn print_config_diff(
 
         print_resource_diff(&remote_schedule_json_string, &local_schedule_json_string);
     } else if delete_schedule {
-        let local_schedule_json_string =
-            serde_json::to_string_pretty(&local_config.schedule).unwrap();
+        let remote_schedule_json_string = serde_json::to_string_pretty(&remote_schedule).unwrap();
 
-        print_resource_diff("null", &local_schedule_json_string);
+        print_resource_diff(&remote_schedule_json_string, "null");
     }
 }
 
