@@ -18,8 +18,10 @@ pub enum Commands {
         /// Config file
         #[arg(short, long, default_value = "fubura.jsonnet")]
         config: String,
+        /// filter with target state machine names
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
+        /// filter with target state machine names
         #[clap(long = "target", short = 't', value_name = "key=[val]")]
         target: Option<Vec<String>>,
     },
@@ -29,7 +31,9 @@ pub enum Commands {
         #[arg(short, long, default_value = "fubura.jsonnet")]
         config: String,
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
+        /// jsonnet --ext-str options
         ext_str: Vec<StrKeyVal>,
+        /// filter with target state machine names
         #[clap(long = "target", short = 't', value_name = "key=[val]")]
         target: Option<Vec<String>>,
     },
