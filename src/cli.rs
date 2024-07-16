@@ -12,9 +12,9 @@ pub struct Cli {
 pub enum Commands {
     /// apply config
     Apply {
-        /// Skip to check changes, but only apply it.
-        #[arg(short, long)]
-        force: bool,
+        /// Skip confirm changes, and apply it immediately.
+        #[clap(long = "auto-approve", short = 'a')]
+        auto_approve: bool,
         /// Config file
         #[arg(short, long, default_value = "fubura.jsonnet")]
         config: String,

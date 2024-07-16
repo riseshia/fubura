@@ -6,7 +6,7 @@ use crate::{scheduler, sfn, sts};
 pub struct ApplyCommand;
 
 impl ApplyCommand {
-    pub async fn run(context: &Context, force: &bool, config: &Config) {
+    pub async fn run(context: &Context, auto_approve: &bool, config: &Config) {
         let mut diff_ops_with_config = vec![];
         let mut op_counts = std::collections::HashMap::new();
 
@@ -66,7 +66,7 @@ impl ApplyCommand {
             println!("    {}: {}", op, count);
         }
 
-        if !force {
+        if !auto_approve {
             print!(
                 r#"
 Do you want apply this change?

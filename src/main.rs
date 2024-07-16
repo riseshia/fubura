@@ -15,7 +15,7 @@ async fn main() {
 
     match &cli.command {
         Commands::Apply {
-            force,
+            auto_approve,
             config,
             ext_str,
             target,
@@ -24,7 +24,7 @@ async fn main() {
             let mut context = Context::async_default().await;
             context.targets.clone_from(target);
 
-            ApplyCommand::run(&context, force, &config).await;
+            ApplyCommand::run(&context, auto_approve, &config).await;
         }
         Commands::Plan {
             config,
