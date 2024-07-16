@@ -30,6 +30,7 @@ async fn main() {
             config,
             ext_str,
             target,
+            json_diff_path,
         } => {
             let config = Config::load_from_path(config, ext_str);
             let mut context = Context::async_default().await;
