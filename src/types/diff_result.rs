@@ -1,17 +1,11 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::DiffOp;
 
 type OpName = String;
 type StateName = String;
-
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
-pub struct OpWithName {
-    pub op_name: OpName,
-    pub list: Vec<StateName>,
-}
 
 #[derive(Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct DiffOpsForSs {

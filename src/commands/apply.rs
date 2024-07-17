@@ -1,14 +1,21 @@
+use std::collections::HashMap;
+
 use crate::context::Context;
 use crate::differ::{build_diff_ops, format_config_diff};
-use crate::types::{Config, DiffOp, DiffOpWithTarget, DiffResult};
+use crate::types::{Config, DiffOp, DiffResult, SsConfig};
 use crate::{scheduler, sfn, sts};
 
 pub struct ApplyCommand;
 
 impl ApplyCommand {
     pub async fn run(context: &Context, auto_approve: &bool, config: &Config) -> DiffResult {
-        let mut diff_ops_with_config = vec![];
         let mut diff_result = DiffResult::default();
+        let ss_config_by_name: HashMap<String, &SsConfig> = HashMap::from_iter(
+            config
+                .ss_configs
+                .iter()
+                .map(|ss_config| (ss_config.state.name.clone(), ss_config)),
+        );
 
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
 
@@ -39,29 +46,6 @@ impl ApplyCommand {
                 format_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
             println!("{}", &text_diff);
             diff_result.append_text_diff(text_diff);
-
-            for diff_op in diff_ops {
-                let op_with_config = match diff_op {
-                    DiffOp::CreateState => DiffOpWithTarget::CreateState(&ss_config.state),
-                    DiffOp::UpdateState => DiffOpWithTarget::UpdateState(&ss_config.state),
-                    DiffOp::DeleteState => DiffOpWithTarget::DeleteState(&ss_config.state),
-                    DiffOp::AddStateTag => DiffOpWithTarget::AddStateTag(&ss_config.state),
-                    DiffOp::RemoteStateTag(tags) => {
-                        DiffOpWithTarget::RemoteStateTag(&ss_config.state, tags)
-                    }
-                    DiffOp::CreateSchedule => {
-                        DiffOpWithTarget::CreateSchedule(ss_config.schedule.as_ref().unwrap())
-                    }
-                    DiffOp::UpdateSchedule => {
-                        DiffOpWithTarget::UpdateSchedule(ss_config.schedule.as_ref().unwrap())
-                    }
-                    DiffOp::DeleteSchedule => {
-                        DiffOpWithTarget::DeleteSchedule(ss_config.schedule.as_ref().unwrap())
-                    }
-                };
-
-                diff_ops_with_config.push(op_with_config);
-            }
         }
 
         println!("\nFubura will:");
@@ -85,43 +69,51 @@ Enter a value: "#
             }
         }
 
-        for diff_op_with_config in diff_ops_with_config.iter() {
-            match diff_op_with_config {
-                DiffOpWithTarget::CreateState(state) => {
-                    println!("Creating state machine: {}", state.name);
-                    sfn::create_state_machine(&context.sfn_client, state).await;
-                }
-                DiffOpWithTarget::UpdateState(state) => {
-                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                    println!("Updating state machine: {}", state.name);
-                    sfn::update_state_machine(&context.sfn_client, &state_arn, state).await;
-                }
-                DiffOpWithTarget::DeleteState(state) => {
-                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                    println!("Deleting state machine: {}", state.name);
-                    sfn::delete_state_machine(&context.sfn_client, &state_arn).await;
-                }
-                DiffOpWithTarget::AddStateTag(state) => {
-                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                    println!("Adding tags to state machine: {}", state.name);
-                    sfn::tag_resource(&context.sfn_client, &state_arn, &state.tags).await;
-                }
-                DiffOpWithTarget::RemoteStateTag(state, removed_keys) => {
-                    let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                    println!("Removing tags from state machine: {}", state.name);
-                    sfn::untag_resource(&context.sfn_client, &state_arn, removed_keys).await;
-                }
-                DiffOpWithTarget::CreateSchedule(schedule) => {
-                    println!("Creating schedule: {}", schedule.name);
-                    scheduler::create_schedule(&context.scheduler_client, schedule).await;
-                }
-                DiffOpWithTarget::UpdateSchedule(schedule) => {
-                    println!("Updating schedule: {}", schedule.name);
-                    scheduler::update_schedule(&context.scheduler_client, schedule).await;
-                }
-                DiffOpWithTarget::DeleteSchedule(schedule) => {
-                    println!("Deleting schedule: {}", schedule.name);
-                    scheduler::delete_schedule(&context.scheduler_client, schedule).await;
+        for diff_ops_for_ss in diff_result.detail_diff_ops.iter() {
+            let ss_config = *ss_config_by_name.get(&diff_ops_for_ss.state_name).unwrap();
+            let state = &ss_config.state;
+
+            for diff_op in diff_ops_for_ss.diff_ops.iter() {
+                match diff_op {
+                    DiffOp::CreateState => {
+                        println!("Creating state machine: {}", state.name);
+                        sfn::create_state_machine(&context.sfn_client, state).await;
+                    }
+                    DiffOp::UpdateState => {
+                        let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                        println!("Updating state machine: {}", state.name);
+                        sfn::update_state_machine(&context.sfn_client, &state_arn, state).await;
+                    }
+                    DiffOp::DeleteState => {
+                        let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                        println!("Deleting state machine: {}", state.name);
+                        sfn::delete_state_machine(&context.sfn_client, &state_arn).await;
+                    }
+                    DiffOp::AddStateTag => {
+                        let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                        println!("Adding tags to state machine: {}", state.name);
+                        sfn::tag_resource(&context.sfn_client, &state_arn, &state.tags).await;
+                    }
+                    DiffOp::RemoteStateTag(removed_keys) => {
+                        let state_arn = format!("{}{}", state_arn_prefix, state.name);
+                        println!("Removing tags from state machine: {}", state.name);
+                        sfn::untag_resource(&context.sfn_client, &state_arn, removed_keys).await;
+                    }
+                    DiffOp::CreateSchedule => {
+                        let schedule = ss_config.schedule.as_ref().unwrap();
+                        println!("Creating schedule: {}", schedule.name);
+                        scheduler::create_schedule(&context.scheduler_client, schedule).await;
+                    }
+                    DiffOp::UpdateSchedule => {
+                        let schedule = ss_config.schedule.as_ref().unwrap();
+                        println!("Updating schedule: {}", schedule.name);
+                        scheduler::update_schedule(&context.scheduler_client, schedule).await;
+                    }
+                    DiffOp::DeleteSchedule => {
+                        let schedule = ss_config.schedule.as_ref().unwrap();
+                        println!("Deleting schedule: {}", schedule.name);
+                        scheduler::delete_schedule(&context.scheduler_client, schedule).await;
+                    }
                 }
             }
         }
