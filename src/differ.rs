@@ -247,6 +247,8 @@ fn build_sfn_tags_diff_ops(
 
 #[cfg(test)]
 mod test {
+    use serde_json::json;
+
     use super::*;
 
     #[test]
@@ -445,7 +447,9 @@ mod test {
         };
 
         let mut remote_state = StateMachine::test_default();
-        remote_state.description = Some("updated".to_string());
+        remote_state.definition = json!({
+            "StartAt": "Updated",
+        });
         let remote_state = Some(remote_state);
 
         let remote_schedule = Some(Schedule::test_default());

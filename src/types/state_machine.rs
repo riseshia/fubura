@@ -197,7 +197,6 @@ pub struct StateMachine {
     pub r#type: StateMachineType,
     pub logging_configuration: Option<LoggingConfiguration>,
     pub tracing_configuration: Option<TracingConfiguration>,
-    pub description: Option<String>,
     pub tags: Vec<ResourceTag>,
 }
 
@@ -206,7 +205,6 @@ impl StateMachine {
     pub fn test_default() -> Self {
         StateMachine {
             name: "HelloWorld".to_string(),
-            description: Some("HelloWorld state machine".to_string()),
             r#type: StateMachineType::Standard,
             definition: serde_json::json!({
                 "StartAt": "FirstState",
@@ -252,7 +250,6 @@ impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOu
             tracing_configuration: value
                 .tracing_configuration()
                 .map(|tc| TracingConfiguration::from(tc.clone())),
-            description: value.description().map(|d| d.to_string()),
             tags: vec![],
         }
     }

@@ -174,7 +174,6 @@ mod test {
                         "definition": {
                             "StartAt": "FirstState"
                         },
-                        "description": null,
                         "loggingConfiguration": null,
                         "tracingConfiguration": null,
                         "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
@@ -298,7 +297,6 @@ mod test {
                         "definition": {
                             "StartAt": "FirstState"
                         },
-                        "description": null,
                         "loggingConfiguration": null,
                         "tracingConfiguration": null,
                         "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
