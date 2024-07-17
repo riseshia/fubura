@@ -6,7 +6,7 @@ use crate::{scheduler, sfn, sts};
 pub struct ApplyCommand;
 
 impl ApplyCommand {
-    pub async fn run(context: &Context, auto_approve: &bool, config: &Config) {
+    pub async fn run(context: &Context, auto_approve: &bool, config: &Config) -> DiffResult {
         let mut diff_ops_with_config = vec![];
         let mut diff_result = DiffResult::default();
 
@@ -125,5 +125,7 @@ Enter a value: "#
                 }
             }
         }
+
+        diff_result
     }
 }

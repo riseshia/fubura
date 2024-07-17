@@ -6,7 +6,7 @@ use crate::{scheduler, sfn, sts};
 pub struct PlanCommand;
 
 impl PlanCommand {
-    pub async fn run(context: &Context, config: &Config) {
+    pub async fn run(context: &Context, config: &Config) -> DiffResult {
         let mut diff_result = DiffResult::default();
 
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
@@ -44,6 +44,8 @@ impl PlanCommand {
         for (op, count) in diff_result.summary.iter() {
             println!("    {}: {}", op, count);
         }
+
+        diff_result
     }
 }
 

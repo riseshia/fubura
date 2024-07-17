@@ -42,7 +42,7 @@ impl Serialize for DiffOp {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.op_type())
+        serializer.serialize_str(self.op_type())
     }
 }
 
