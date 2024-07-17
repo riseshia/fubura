@@ -1,13 +1,13 @@
 use crate::context::Context;
-use crate::differ::{build_diff_ops, classify_diff_op, print_config_diff};
-use crate::types::Config;
+use crate::differ::{build_diff_ops, format_config_diff};
+use crate::types::{Config, DiffResult};
 use crate::{scheduler, sfn, sts};
 
 pub struct PlanCommand;
 
 impl PlanCommand {
     pub async fn run(context: &Context, config: &Config) {
-        let mut op_counts = std::collections::HashMap::new();
+        let mut diff_result = DiffResult::default();
 
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
 
@@ -30,16 +30,18 @@ impl PlanCommand {
             };
 
             let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
-            print_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
-
-            for op in diff_ops.iter() {
-                let class = classify_diff_op(op);
-                *op_counts.entry(class).or_insert(0) += 1;
+            for diff_op in diff_ops.iter() {
+                diff_result.append_diff_op(&ss_config.state.name, diff_op)
             }
+
+            let text_diff =
+                format_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
+            println!("{}", &text_diff);
+            diff_result.append_text_diff(text_diff);
         }
 
         println!("\nFubura will:");
-        for (op, count) in op_counts.iter() {
+        for (op, count) in diff_result.summary.iter() {
             println!("    {}: {}", op, count);
         }
     }

@@ -3,17 +3,19 @@ use std::collections::HashSet;
 use console::Style;
 use similar::{ChangeTag, TextDiff};
 
-use crate::types::{DiffOp, DiffResult, ResourceTag, Schedule, SsConfig, StateMachine};
+use crate::types::{DiffOp, ResourceTag, Schedule, SsConfig, StateMachine};
 
-fn print_resource_diff(target: &str, remote: &str, local: &str) {
+fn format_resource_diff(target: &str, remote: &str, local: &str) -> String {
+    let mut buffer = String::new();
+
     let remote_name = format!("{} (remote)", target);
     let local_name = format!("{} (local)", target);
 
     let diff = TextDiff::from_lines(remote, local);
 
     for hunk in diff.unified_diff().missing_newline_hint(true).iter_hunks() {
-        println!("--- {}", &remote_name);
-        println!("+++ {}", &local_name);
+        buffer.push_str(&format!("--- {}\n", &remote_name));
+        buffer.push_str(&format!("+++ {}\n", &local_name));
 
         for change in hunk.iter_changes() {
             let (sign, style) = match change.tag() {
@@ -21,21 +23,29 @@ fn print_resource_diff(target: &str, remote: &str, local: &str) {
                 ChangeTag::Equal => (" ", Style::new()),
                 ChangeTag::Delete => ("-", Style::new().red()),
             };
-            print!("{}{}", style.apply_to(sign).bold(), style.apply_to(change));
+            buffer.push_str(&format!(
+                "{}{}",
+                style.apply_to(sign).bold(),
+                style.apply_to(change)
+            ));
         }
     }
+
+    buffer
 }
 
-pub fn print_config_diff(
+pub fn format_config_diff(
     local_config: &SsConfig,
     remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
     diff_ops: &[DiffOp],
-) {
+) -> String {
     let mut change_state = false;
     let mut delete_state = false;
     let mut change_schedule = false;
     let mut delete_schedule = false;
+
+    let mut buffer = String::new();
 
     for op in diff_ops {
         match op {
@@ -58,8 +68,7 @@ pub fn print_config_diff(
     }
 
     if !change_state && !change_schedule && !delete_state && !delete_schedule {
-        println!("no difference");
-        return;
+        return "no difference".to_string();
     }
 
     let target_state_id = local_config.state.name.as_str();
@@ -67,16 +76,18 @@ pub fn print_config_diff(
         let remote_state_json_string = serde_json::to_string_pretty(&remote_state).unwrap();
         let local_state_json_string = serde_json::to_string_pretty(&local_config.state).unwrap();
 
-        print_resource_diff(
+        let text_diff = format_resource_diff(
             target_state_id,
             &remote_state_json_string,
             &local_state_json_string,
         );
+        buffer.push_str(format!("{}\n", text_diff).as_str());
     } else if delete_state {
-        println!(
+        let str = format!(
             "remote state machine({}) is going to be deleted",
             remote_state.as_ref().unwrap().name
         );
+        buffer.push_str(str.as_str());
     }
 
     if change_schedule {
@@ -85,17 +96,22 @@ pub fn print_config_diff(
         let local_schedule_json_string =
             serde_json::to_string_pretty(&local_config.schedule).unwrap();
 
-        print_resource_diff(
+        let text_diff = format_resource_diff(
             target_schedule_name,
             &remote_schedule_json_string,
             &local_schedule_json_string,
         );
+        let str = format!("{}\n", text_diff);
+        buffer.push_str(str.as_str());
     } else if delete_schedule {
-        println!(
+        let str = format!(
             "remote schedule({}) is going to be deleted",
             remote_schedule.as_ref().unwrap().name
         );
+        buffer.push_str(str.as_str());
     }
+
+    buffer
 }
 
 fn split_sfn_and_tags(sfn: Option<StateMachine>) -> (Option<StateMachine>, Vec<ResourceTag>) {
@@ -111,7 +127,6 @@ fn split_sfn_and_tags(sfn: Option<StateMachine>) -> (Option<StateMachine>, Vec<R
 }
 
 pub fn build_diff_ops(
-    diff_result: &mut DiffResult,
     local_config: &SsConfig,
     remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
@@ -127,27 +142,24 @@ pub fn build_diff_ops(
 
     if local_config.delete_all {
         if remote_state.is_some() {
-            diff_result.append_diff_op(&local_config.state.name, &DiffOp::DeleteState);
             expected_ops.push(DiffOp::DeleteState);
         } else {
             // No change
         }
     } else if let Some(remote_state) = remote_state {
         if local_state != remote_state {
-            diff_result.append_diff_op(&local_config.state.name, &DiffOp::UpdateState);
             expected_ops.push(DiffOp::UpdateState);
         } else {
             // No change
         }
     } else {
-        diff_result.append_diff_op(&local_config.state.name, &DiffOp::CreateState);
         expected_ops.push(DiffOp::CreateState);
     }
 
     if !expected_ops.contains(&DiffOp::DeleteState) {
         let ops = build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags);
         for op in ops {
-            diff_result.append_diff_op(&local_config.state.name, &op);
+            expected_ops.push(op);
         }
     }
 
@@ -227,38 +239,6 @@ fn build_sfn_tags_diff_ops(
     }
 
     required_ops.into_iter().collect()
-}
-
-pub fn classify_diff_op(diff_op: &DiffOp) -> String {
-    match diff_op {
-        DiffOp::CreateState => "create_state",
-        DiffOp::UpdateState => "update_state",
-        DiffOp::DeleteState => "delete_state",
-        DiffOp::AddStateTag => "update_state",
-        DiffOp::RemoteStateTag(_) => "update_state",
-        DiffOp::CreateSchedule => "create_schedule",
-        DiffOp::UpdateSchedule => "update_schedule",
-        DiffOp::DeleteSchedule => "delete_schedule",
-    }
-    .to_string()
-}
-
-pub fn print_diff_ops(diff_ops: &[DiffOp]) {
-    if diff_ops.is_empty() {
-        println!("no difference");
-        return;
-    }
-
-    let mut op_counts = std::collections::HashSet::new();
-    for op in diff_ops.iter() {
-        let class = classify_diff_op(op);
-        op_counts.insert(class);
-    }
-
-    println!("diff ops:");
-    for op in op_counts.iter() {
-        println!("{}: 1", op);
-    }
 }
 
 #[cfg(test)]

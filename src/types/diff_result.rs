@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use super::DiffOp;
+
 type OpName = String;
 type StateName = String;
 
@@ -11,10 +13,19 @@ pub struct OpWithName {
     pub list: Vec<StateName>,
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Debug, PartialEq, Eq, Clone)]
+pub struct DiffOpsForSs {
+    pub state_name: String,
+    pub diff_ops: Vec<DiffOp>,
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct DiffResult {
     pub text_diff: Vec<String>,
-    pub diff_ops: Vec<OpWithName>,
+    // diff_ops list used for report to user. tag api are merged into update_state
+    pub diff_ops: Vec<DiffOpsForSs>,
+    // diff_ops list used for apply. which know about tags
+    pub detail_diff_ops: Vec<DiffOpsForSs>,
     pub no_change: bool,
     pub summary: HashMap<OpName, usize>,
     #[serde(skip_serializing)]
@@ -26,32 +37,8 @@ impl Default for DiffResult {
         DiffResult {
             json_diff_path: None,
             text_diff: vec![],
-            diff_ops: vec![
-                OpWithName {
-                    op_name: "create_state".to_string(),
-                    list: vec![],
-                },
-                OpWithName {
-                    op_name: "update_state".to_string(),
-                    list: vec![],
-                },
-                OpWithName {
-                    op_name: "delete_state".to_string(),
-                    list: vec![],
-                },
-                OpWithName {
-                    op_name: "create_schedule".to_string(),
-                    list: vec![],
-                },
-                OpWithName {
-                    op_name: "update_schedule".to_string(),
-                    list: vec![],
-                },
-                OpWithName {
-                    op_name: "delete_schedule".to_string(),
-                    list: vec![],
-                },
-            ],
+            diff_ops: vec![],
+            detail_diff_ops: vec![],
             no_change: true,
             summary: HashMap::from([
                 ("create_state".to_string(), 0),
@@ -66,34 +53,54 @@ impl Default for DiffResult {
 }
 
 impl DiffResult {
-    fn enabled(&self) -> bool {
-        self.json_diff_path.is_some()
-    }
-
     pub fn append_text_diff(&mut self, diff: String) {
-        if !self.enabled() {
-            return;
-        }
-
         self.text_diff.push(diff);
     }
 
-    pub fn append_diff_op(&mut self, op_name: &OpName, state_name: &StateName) {
-        if !self.enabled() {
-            return;
-        }
+    pub fn append_diff_op(&mut self, state_name: &StateName, diff_op: &DiffOp) {
+        self.add_detail_diff_op(state_name, diff_op);
+        self.add_diff_op(state_name, diff_op);
 
-        let op_name = op_name.clone();
+        self.summary
+            .entry(diff_op.op_type().to_string())
+            .and_modify(|e| *e += 1);
+        self.no_change = false;
+    }
+
+    fn add_detail_diff_op(&mut self, state_name: &StateName, diff_op: &DiffOp) {
         let state_name = state_name.clone();
 
-        let diff_op = self
+        let diff_op_for_ss = self
+            .detail_diff_ops
+            .iter_mut()
+            .find(|ddo| ddo.state_name == state_name);
+        if let Some(diff_op_for_ss) = diff_op_for_ss {
+            diff_op_for_ss.diff_ops.push(diff_op.clone());
+        } else {
+            let diff_op_for_ss = DiffOpsForSs {
+                state_name,
+                diff_ops: vec![diff_op.clone()],
+            };
+            self.detail_diff_ops.push(diff_op_for_ss);
+        }
+    }
+
+    fn add_diff_op(&mut self, state_name: &StateName, diff_op: &DiffOp) {
+        let state_name = state_name.clone();
+        let diff_op = DiffOp::op_for_report(diff_op);
+
+        let diff_op_for_ss = self
             .diff_ops
             .iter_mut()
-            .find(|op| op.op_name == op_name)
-            .unwrap_or_else(|| panic!("op_name: {} not found in diff_ops", op_name));
-
-        diff_op.list.push(state_name);
-        self.summary.entry(op_name).and_modify(|e| *e += 1);
-        self.no_change = false;
+            .find(|ddo| ddo.state_name == state_name);
+        if let Some(diff_op_for_ss) = diff_op_for_ss {
+            diff_op_for_ss.diff_ops.push(diff_op.clone());
+        } else {
+            let diff_op_for_ss = DiffOpsForSs {
+                state_name,
+                diff_ops: vec![diff_op.clone()],
+            };
+            self.diff_ops.push(diff_op_for_ss);
+        }
     }
 }

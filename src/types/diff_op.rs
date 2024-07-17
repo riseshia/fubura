@@ -14,21 +14,35 @@ pub enum DiffOp {
     DeleteState,
 }
 
+impl DiffOp {
+    pub fn op_for_report(op: &DiffOp) -> &DiffOp {
+        match op {
+            DiffOp::AddStateTag => &DiffOp::UpdateState,
+            DiffOp::RemoteStateTag(_) => &DiffOp::UpdateState,
+            op => op,
+        }
+    }
+
+    pub fn op_type(&self) -> &str {
+        match self {
+            DiffOp::CreateState => "create_state",
+            DiffOp::UpdateState => "update_state",
+            DiffOp::AddStateTag => "add_state_tag",
+            DiffOp::RemoteStateTag(_) => "remote_state_tag",
+            DiffOp::CreateSchedule => "create_schedule",
+            DiffOp::UpdateSchedule => "update_schedule",
+            DiffOp::DeleteSchedule => "delete_schedule",
+            DiffOp::DeleteState => "delete_state",
+        }
+    }
+}
+
 impl Serialize for DiffOp {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        match self {
-            DiffOp::CreateState => serializer.serialize_str("create_state"),
-            DiffOp::UpdateState => serializer.serialize_str("update_state"),
-            DiffOp::AddStateTag => serializer.serialize_str("add_state_tag"),
-            DiffOp::RemoteStateTag(_) => serializer.serialize_str("remote_state_tag"),
-            DiffOp::CreateSchedule => serializer.serialize_str("create_schedule"),
-            DiffOp::UpdateSchedule => serializer.serialize_str("update_schedule"),
-            DiffOp::DeleteSchedule => serializer.serialize_str("delete_schedule"),
-            DiffOp::DeleteState => serializer.serialize_str("delete_state"),
-        }
+        serializer.serialize_str(&self.op_type())
     }
 }
 
