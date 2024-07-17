@@ -16,38 +16,37 @@ async fn main() {
     match &cli.command {
         Commands::Apply {
             auto_approve,
-            config,
+            config_path,
             ext_str,
             target,
         } => {
-            let config = Config::load_from_path(config, ext_str);
+            let config = Config::load_from_path(config_path, ext_str);
             let mut context = Context::async_default().await;
             context.targets.clone_from(target);
 
             ApplyCommand::run(&context, auto_approve, &config).await;
         }
         Commands::Plan {
-            config,
+            config_path,
             ext_str,
             target,
             json_diff_path,
         } => {
-            let config = Config::load_from_path(config, ext_str);
+            let config = Config::load_from_path(config_path, ext_str);
             let mut context = Context::async_default().await;
             context.targets.clone_from(target);
 
             PlanCommand::run(&context, &config).await;
         }
         Commands::Import {
-            config,
+            config_path,
             ext_str,
             sfn_name,
             schedule_name_with_group,
         } => {
-            let config_path = config;
-            let config_exist = Path::new(config).exists();
+            let config_exist = Path::new(config_path).exists();
             let config = if config_exist {
-                Config::load_from_path(config, ext_str)
+                Config::load_from_path(config_path, ext_str)
             } else {
                 Config::default()
             };

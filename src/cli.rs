@@ -15,9 +15,9 @@ pub enum Commands {
         /// Skip confirm changes, and apply it immediately.
         #[clap(long = "auto-approve", short = 'a')]
         auto_approve: bool,
-        /// Config file
-        #[arg(short, long, default_value = "fubura.jsonnet")]
-        config: String,
+        /// Config file path
+        #[clap(long = "config", short = 'c', default_value = "fubura.jsonnet")]
+        config_path: String,
         /// filter with target state machine names
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
@@ -27,9 +27,9 @@ pub enum Commands {
     },
     /// plan config
     Plan {
-        /// Config file
-        #[arg(short, long, default_value = "fubura.jsonnet")]
-        config: String,
+        /// Config file path
+        #[clap(long = "config", short = 'c', default_value = "fubura.jsonnet")]
+        config_path: String,
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         /// jsonnet --ext-str options
         ext_str: Vec<StrKeyVal>,
@@ -43,13 +43,8 @@ pub enum Commands {
     /// import state machine to specified config file
     Import {
         /// Where to import its config
-        #[arg(
-            short,
-            long,
-            default_value = "fubura.jsonnet",
-            value_name = "import-path"
-        )]
-        config: String,
+        #[clap(long = "config", short = 'c', default_value = "fubura.jsonnet")]
+        config_path: String,
         #[clap(long = "ext-str", short = 'V', value_name = "key=[val]")]
         ext_str: Vec<StrKeyVal>,
         /// import target state machine arn
