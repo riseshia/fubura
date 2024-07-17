@@ -197,7 +197,6 @@ pub struct StateMachine {
     pub r#type: StateMachineType,
     pub logging_configuration: Option<LoggingConfiguration>,
     pub tracing_configuration: Option<TracingConfiguration>,
-    pub label: Option<String>,
     pub description: Option<String>,
     pub tags: Vec<ResourceTag>,
 }
@@ -214,7 +213,6 @@ impl StateMachine {
             }),
             role_arn: "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
             status: Some("ACTIVE".to_string()),
-            label: Some("HelloWorld".to_string()),
             logging_configuration: Some(LoggingConfiguration {
                 level: Some(LogLevel::All),
                 include_execution_data: Some(true),
@@ -254,7 +252,6 @@ impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOu
             tracing_configuration: value
                 .tracing_configuration()
                 .map(|tc| TracingConfiguration::from(tc.clone())),
-            label: value.label().map(|l| l.to_string()),
             description: value.description().map(|d| d.to_string()),
             tags: vec![],
         }
