@@ -5,7 +5,6 @@ use serde::Serialize;
 use super::DiffOp;
 
 type OpName = String;
-type StateName = String;
 
 #[derive(Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct DiffOpsForSs {
@@ -48,7 +47,7 @@ impl DiffResult {
         self.text_diff.push(diff);
     }
 
-    pub fn append_diff_op(&mut self, state_name: &StateName, diff_op: &DiffOp) {
+    pub fn append_diff_op(&mut self, state_name: &str, diff_op: &DiffOp) {
         self.add_detail_diff_op(state_name, diff_op);
         self.add_diff_op(state_name, diff_op);
 
@@ -58,8 +57,8 @@ impl DiffResult {
         self.no_change = false;
     }
 
-    fn add_detail_diff_op(&mut self, state_name: &StateName, diff_op: &DiffOp) {
-        let state_name = state_name.clone();
+    fn add_detail_diff_op(&mut self, state_name: &str, diff_op: &DiffOp) {
+        let state_name = state_name.to_string();
 
         let diff_op_for_ss = self
             .detail_diff_ops
@@ -76,8 +75,8 @@ impl DiffResult {
         }
     }
 
-    fn add_diff_op(&mut self, state_name: &StateName, diff_op: &DiffOp) {
-        let state_name = state_name.clone();
+    fn add_diff_op(&mut self, state_name: &str, diff_op: &DiffOp) {
+        let state_name = state_name.to_string();
         let diff_op = DiffOp::op_for_report(diff_op);
 
         let diff_op_for_ss = self
@@ -85,7 +84,9 @@ impl DiffResult {
             .iter_mut()
             .find(|ddo| ddo.state_name == state_name);
         if let Some(diff_op_for_ss) = diff_op_for_ss {
-            diff_op_for_ss.diff_ops.push(diff_op.clone());
+            if !diff_op_for_ss.diff_ops.contains(diff_op) {
+                diff_op_for_ss.diff_ops.push(diff_op.clone());
+            }
         } else {
             let diff_op_for_ss = DiffOpsForSs {
                 state_name,

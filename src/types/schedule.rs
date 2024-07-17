@@ -754,6 +754,34 @@ impl Schedule {
     pub fn schedule_name_with_group(&self) -> String {
         format!("{}/{}", self.group_name, self.name)
     }
+
+    #[cfg(test)]
+    pub fn test_default() -> Self {
+        Schedule {
+            group_name: "default".to_string(),
+            name: "HelloWorld".to_string(),
+            description: Some("HellowWorld schedule".to_string()),
+            start_date: None,
+            end_date: None,
+            schedule_expression: "rate(1 minute)".to_string(),
+            schedule_expression_timezone: Some("UTC".to_string()),
+            flexible_time_window: None,
+            kms_key_arn: None,
+            state: ScheduleState::Enabled,
+            target: ScheduleTarget {
+                arn: "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld".to_string(),
+                role_arn: "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
+                dead_letter_config: None,
+                ecs_parameters: None,
+                event_bridge_parameters: None,
+                input: None,
+                kinesis_parameters: None,
+                retry_policy: None,
+                sage_maker_pipeline_parameters: None,
+                sqs_parameters: None,
+            },
+        }
+    }
 }
 
 fn default_date() -> Option<DateTime> {

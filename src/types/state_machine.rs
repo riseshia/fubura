@@ -202,6 +202,40 @@ pub struct StateMachine {
     pub tags: Vec<ResourceTag>,
 }
 
+impl StateMachine {
+    #[cfg(test)]
+    pub fn test_default() -> Self {
+        StateMachine {
+            name: "HelloWorld".to_string(),
+            description: Some("HelloWorld state machine".to_string()),
+            r#type: StateMachineType::Standard,
+            definition: serde_json::json!({
+                "StartAt": "FirstState",
+            }),
+            role_arn: "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
+            status: Some("ACTIVE".to_string()),
+            label: Some("HelloWorld".to_string()),
+            logging_configuration: Some(LoggingConfiguration {
+                level: Some(LogLevel::All),
+                include_execution_data: Some(true),
+                destinations: vec![LogDestination {
+                    cloud_watch_logs_log_group: Some(CloudWatchLogsLogGroup {
+                        log_group_arn: Some(
+                            "arn:aws:logs:us-west-2:123456789012:log-group:HelloWorldLogGroup"
+                                .to_string(),
+                        ),
+                    }),
+                }],
+            }),
+            tracing_configuration: None,
+            tags: vec![ResourceTag {
+                key: "Name".to_string(),
+                value: "HelloWorld".to_string(),
+            }],
+        }
+    }
+}
+
 impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOutput>
     for StateMachine
 {

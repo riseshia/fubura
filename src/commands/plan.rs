@@ -62,11 +62,16 @@ fn write_result_to_path(output_path: &str, diff_result: &DiffResult) {
 
 #[cfg(test)]
 mod test {
+    use crate::types::{DiffOp, Schedule, SsConfig, StateMachine};
+
     use super::*;
 
+    use aws_sdk_scheduler::operation::get_schedule::GetScheduleError;
     use aws_sdk_scheduler::{
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
     };
+    use aws_sdk_sfn::error::SdkError;
+    use aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineError;
     use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder;
     use aws_sdk_sfn::types::builders::TagBuilder;
     use aws_sdk_sfn::{
@@ -76,6 +81,8 @@ mod test {
     };
     use aws_sdk_sts::operation::get_caller_identity::builders::GetCallerIdentityOutputBuilder;
 
+    use aws_smithy_runtime_api::http::{Response, StatusCode};
+    use aws_smithy_types::body::SdkBody;
     use mockall::predicate::eq;
 
     #[tokio::test]
@@ -206,5 +213,68 @@ mod test {
         let config: Config = serde_json::from_value(ss_config_json).unwrap();
 
         PlanCommand::run(&context, &config).await;
+    }
+
+    #[tokio::test]
+    async fn test_create_state_and_schedule() {
+        let mut context = Context::async_default().await;
+
+        context
+            .sts_client
+            .expect_get_caller_identity()
+            .return_once(|| {
+                Ok(GetCallerIdentityOutputBuilder::default()
+                    .account("123456789012".to_string())
+                    .build())
+            });
+
+        context
+            .sfn_client
+            .expect_describe_state_machine()
+            .with(eq(
+                "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            ))
+            .return_once(|_| {
+                Err(SdkError::service_error(
+                    DescribeStateMachineError::StateMachineDoesNotExist(
+                        aws_sdk_sfn::types::error::StateMachineDoesNotExist::builder().build(),
+                    ),
+                    Response::new(StatusCode::try_from(404).unwrap(), SdkBody::empty()),
+                ))
+            });
+
+        context
+            .scheduler_client
+            .expect_get_schedule()
+            .with(eq("default"), eq("HelloWorld"))
+            .return_once(|_, _| {
+                Err(aws_sdk_scheduler::error::SdkError::service_error(
+                    GetScheduleError::ResourceNotFoundException(
+                        aws_sdk_scheduler::types::error::ResourceNotFoundException::builder()
+                            .message("Resource not found")
+                            .build()
+                            .unwrap(),
+                    ),
+                    Response::new(StatusCode::try_from(404).unwrap(), SdkBody::empty()),
+                ))
+            });
+
+        let config = Config {
+            ss_configs: vec![SsConfig {
+                state: StateMachine::test_default(),
+                schedule: Some(Schedule::test_default()),
+                delete_all: false,
+                delete_schedule: false,
+            }],
+        };
+
+        let mut actual_diff_result = PlanCommand::run(&context, &config).await;
+        actual_diff_result.text_diff.clear(); // do not check text_diff
+        let mut expected_diff_result = DiffResult::default();
+        expected_diff_result.append_diff_op("HelloWorld", &DiffOp::CreateState);
+        expected_diff_result.append_diff_op("HelloWorld", &DiffOp::AddStateTag);
+        expected_diff_result.append_diff_op("HelloWorld", &DiffOp::CreateSchedule);
+
+        similar_asserts::assert_eq!(expected_diff_result, actual_diff_result);
     }
 }
