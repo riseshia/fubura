@@ -84,7 +84,7 @@ pub fn format_config_diff(
         buffer.push_str(format!("{}\n", text_diff).as_str());
     } else if delete_state {
         let str = format!(
-            "remote state machine({}) is going to be deleted",
+            "State machine({}) is going to be deleted",
             remote_state.as_ref().unwrap().name
         );
         buffer.push_str(str.as_str());
@@ -105,7 +105,7 @@ pub fn format_config_diff(
         buffer.push_str(str.as_str());
     } else if delete_schedule {
         let str = format!(
-            "remote schedule({}) is going to be deleted",
+            "Schedule({}) is going to be deleted",
             remote_schedule.as_ref().unwrap().name
         );
         buffer.push_str(str.as_str());
