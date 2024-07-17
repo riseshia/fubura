@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use console::Style;
 use similar::{ChangeTag, TextDiff};
 
-use crate::types::{DiffOp, ResourceTag, Schedule, SsConfig, StateMachine};
+use crate::types::{DiffOp, DiffResult, ResourceTag, Schedule, SsConfig, StateMachine};
 
 fn print_resource_diff(target: &str, remote: &str, local: &str) {
     let remote_name = format!("{} (remote)", target);
@@ -111,6 +111,7 @@ fn split_sfn_and_tags(sfn: Option<StateMachine>) -> (Option<StateMachine>, Vec<R
 }
 
 pub fn build_diff_ops(
+    diff_result: &mut DiffResult,
     local_config: &SsConfig,
     remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
@@ -126,22 +127,28 @@ pub fn build_diff_ops(
 
     if local_config.delete_all {
         if remote_state.is_some() {
+            diff_result.append_diff_op(&local_config.state.name, &DiffOp::DeleteState);
             expected_ops.push(DiffOp::DeleteState);
         } else {
             // No change
         }
     } else if let Some(remote_state) = remote_state {
         if local_state != remote_state {
+            diff_result.append_diff_op(&local_config.state.name, &DiffOp::UpdateState);
             expected_ops.push(DiffOp::UpdateState);
         } else {
             // No change
         }
     } else {
+        diff_result.append_diff_op(&local_config.state.name, &DiffOp::CreateState);
         expected_ops.push(DiffOp::CreateState);
     }
 
     if !expected_ops.contains(&DiffOp::DeleteState) {
-        build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags, &mut expected_ops);
+        let ops = build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags);
+        for op in ops {
+            diff_result.append_diff_op(&local_config.state.name, &op);
+        }
     }
 
     let local_schedule = local_config.schedule.clone();
@@ -180,30 +187,22 @@ pub fn build_diff_ops(
 fn build_sfn_tags_diff_ops(
     local_state_tags: &[ResourceTag],
     remote_state_tags: &[ResourceTag],
-    expected_ops: &mut Vec<DiffOp>,
-) {
+) -> Vec<DiffOp> {
     let mut required_ops: HashSet<DiffOp> = HashSet::from([]);
     if local_state_tags == remote_state_tags {
-        return;
+        return vec![];
     }
 
     let local_tag_keys: HashSet<&String> = local_state_tags.iter().map(|tag| &tag.key).collect();
     let remote_tag_keys: HashSet<&String> = remote_state_tags.iter().map(|tag| &tag.key).collect();
 
+    // Check added
     let added_tag_keys: HashSet<_> = local_tag_keys.difference(&remote_tag_keys).collect();
     if !added_tag_keys.is_empty() {
         required_ops.insert(DiffOp::AddStateTag);
     }
 
-    let removed_tag_keys: HashSet<_> = remote_tag_keys.difference(&local_tag_keys).collect();
-    if !removed_tag_keys.is_empty() {
-        let keys: Vec<String> = removed_tag_keys
-            .into_iter()
-            .map(|key| key.to_string())
-            .collect();
-        required_ops.insert(DiffOp::RemoteStateTag(keys));
-    }
-
+    // Check value updated
     let retained_tag_keys: HashSet<_> = local_tag_keys.intersection(&remote_tag_keys).collect();
     let local_retained_tags: Vec<_> = local_state_tags
         .iter()
@@ -217,9 +216,17 @@ fn build_sfn_tags_diff_ops(
         required_ops.insert(DiffOp::AddStateTag);
     }
 
-    for op in required_ops {
-        expected_ops.push(op);
+    // Check deleted
+    let removed_tag_keys: HashSet<_> = remote_tag_keys.difference(&local_tag_keys).collect();
+    if !removed_tag_keys.is_empty() {
+        let keys: Vec<String> = removed_tag_keys
+            .into_iter()
+            .map(|key| key.to_string())
+            .collect();
+        required_ops.insert(DiffOp::RemoteStateTag(keys));
     }
+
+    required_ops.into_iter().collect()
 }
 
 pub fn classify_diff_op(diff_op: &DiffOp) -> String {
@@ -260,8 +267,6 @@ mod test {
 
     #[test]
     fn test_build_tags_diff_ops_with_no_diff() {
-        let mut actual_ops: Vec<DiffOp> = vec![];
-
         let local_tags = vec![
             ResourceTag {
                 key: "key1".to_string(),
@@ -283,15 +288,13 @@ mod test {
             },
         ];
 
-        build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
+        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
 
         assert_eq!(actual_ops, vec![]);
     }
 
     #[test]
     fn test_build_tags_diff_ops_with_add_tag() {
-        let mut actual_ops: Vec<DiffOp> = vec![];
-
         let local_tags = vec![
             ResourceTag {
                 key: "key1".to_string(),
@@ -307,15 +310,13 @@ mod test {
             value: "value1".to_string(),
         }];
 
-        build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
+        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
 
         assert_eq!(actual_ops, vec![DiffOp::AddStateTag]);
     }
 
     #[test]
     fn test_build_tags_diff_ops_with_remove_tag() {
-        let mut actual_ops: Vec<DiffOp> = vec![];
-
         let local_tags = vec![ResourceTag {
             key: "key1".to_string(),
             value: "value1".to_string(),
@@ -331,7 +332,7 @@ mod test {
             },
         ];
 
-        build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
+        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
 
         assert_eq!(
             actual_ops,
@@ -341,8 +342,6 @@ mod test {
 
     #[test]
     fn test_build_tags_diff_ops_with_rewrite_tag() {
-        let mut actual_ops: Vec<DiffOp> = vec![];
-
         let local_tags = vec![
             ResourceTag {
                 key: "key1".to_string(),
@@ -364,15 +363,13 @@ mod test {
             },
         ];
 
-        build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
+        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
 
         assert_eq!(actual_ops, vec![DiffOp::AddStateTag]);
     }
 
     #[test]
     fn test_build_tags_diff_ops_with_composite_tag() {
-        let mut actual_ops: Vec<DiffOp> = vec![];
-
         let local_tags = vec![
             ResourceTag {
                 key: "key1".to_string(),
@@ -402,7 +399,7 @@ mod test {
             },
         ];
 
-        build_sfn_tags_diff_ops(&local_tags, &remote_tags, &mut actual_ops);
+        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
 
         assert_eq!(
             actual_ops,
