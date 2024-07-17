@@ -8,6 +8,7 @@ pub struct Context {
     pub sts_client: Sts,
     pub aws_region: String,
     pub targets: Option<Vec<String>>,
+    pub json_diff_path: Option<String>,
 }
 
 impl Context {
@@ -31,6 +32,7 @@ impl Context {
             sts_client,
             aws_region,
             targets: None,
+            json_diff_path: None,
         }
     }
 
@@ -46,6 +48,7 @@ impl Context {
             sts_client: MockStsImpl::default(),
             aws_region: "us-west-2".to_string(),
             targets: None,
+            json_diff_path: None,
         }
     }
 }

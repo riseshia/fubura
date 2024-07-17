@@ -22,14 +22,11 @@ pub struct DiffResult {
     pub detail_diff_ops: Vec<DiffOpsForSs>,
     pub no_change: bool,
     pub summary: HashMap<OpName, usize>,
-    #[serde(skip_serializing)]
-    pub json_diff_path: Option<String>,
 }
 
 impl Default for DiffResult {
     fn default() -> Self {
         DiffResult {
-            json_diff_path: None,
             text_diff: vec![],
             diff_ops: vec![],
             detail_diff_ops: vec![],

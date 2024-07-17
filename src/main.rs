@@ -35,6 +35,7 @@ async fn main() {
             let config = Config::load_from_path(config_path, ext_str);
             let mut context = Context::async_default().await;
             context.targets.clone_from(target);
+            context.json_diff_path.clone_from(json_diff_path);
 
             PlanCommand::run(&context, &config).await;
         }

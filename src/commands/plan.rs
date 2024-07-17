@@ -45,8 +45,19 @@ impl PlanCommand {
             println!("    {}: {}", op, count);
         }
 
+        if let Some(json_diff_path) = &context.json_diff_path {
+            write_result_to_path(json_diff_path, &diff_result);
+        }
+
         diff_result
     }
+}
+
+fn write_result_to_path(output_path: &str, diff_result: &DiffResult) {
+    let json_diff = serde_json::to_string_pretty(diff_result).unwrap();
+    std::fs::write(output_path, json_diff).unwrap_or_else(|_| {
+        panic!("Failed to write diff result to {}", output_path);
+    });
 }
 
 #[cfg(test)]
