@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use console::strip_ansi_codes;
 use serde::Serialize;
 
 use super::DiffOp;
@@ -45,7 +46,8 @@ impl Default for DiffResult {
 
 impl DiffResult {
     pub fn append_text_diff(&mut self, diff: String) {
-        self.text_diff.push(diff);
+        let stripped_diff = strip_ansi_codes(&diff);
+        self.text_diff.push(stripped_diff.to_string());
     }
 
     pub fn append_diff_op(&mut self, state_name: &str, diff_op: &DiffOp) {
