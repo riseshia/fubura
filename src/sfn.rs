@@ -66,25 +66,21 @@ impl SfnImpl {
         &self,
         state: &StateMachine,
     ) -> Result<CreateStateMachineOutput, sfn::error::SdkError<CreateStateMachineError>> {
+        // XXX: Handle publish and version_description some day?
+
         let mut builder = self
             .inner
             .create_state_machine()
             .name(&state.name)
             .definition(serde_json::to_string(&state.definition).unwrap())
             .role_arn(&state.role_arn)
-            .r#type(state.r#type.into());
+            .r#type(state.r#type.into())
+            .set_logging_configuration(state.logging_configuration.clone().map(|lc| lc.into()))
+            .set_tracing_configuration(state.tracing_configuration.clone().map(|tc| tc.into()));
 
-        if let Some(logging_configuration) = &state.logging_configuration {
-            builder = builder.logging_configuration(logging_configuration.clone().into());
-        }
-        if let Some(tracing_configuration) = &state.tracing_configuration {
-            builder = builder.tracing_configuration(tracing_configuration.clone().into());
-        }
         for tag in &state.tags {
             builder = builder.tags(tag.clone().into());
         }
-
-        // XXX: Handle publish and version_description some day?
 
         builder.send().await
     }
@@ -94,23 +90,17 @@ impl SfnImpl {
         state_arn: &str,
         state: &StateMachine,
     ) -> Result<UpdateStateMachineOutput, sfn::error::SdkError<UpdateStateMachineError>> {
-        let mut builder = self
-            .inner
+        // XXX: Handle publish and version_description some day?
+
+        self.inner
             .update_state_machine()
             .state_machine_arn(state_arn)
             .definition(serde_json::to_string(&state.definition).unwrap())
-            .role_arn(&state.role_arn);
-
-        if let Some(logging_configuration) = &state.logging_configuration {
-            builder = builder.logging_configuration(logging_configuration.clone().into());
-        }
-        if let Some(tracing_configuration) = &state.tracing_configuration {
-            builder = builder.tracing_configuration(tracing_configuration.clone().into());
-        }
-
-        // XXX: Handle publish and version_description some day?
-
-        builder.send().await
+            .role_arn(&state.role_arn)
+            .set_logging_configuration(state.logging_configuration.clone().map(|lc| lc.into()))
+            .set_tracing_configuration(state.tracing_configuration.clone().map(|tc| tc.into()))
+            .send()
+            .await
     }
 
     pub async fn delete_state_machine(
