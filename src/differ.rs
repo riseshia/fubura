@@ -9,7 +9,7 @@ fn format_resource_diff(target: &str, remote: &str, local: &str) -> String {
     let mut buffer = String::new();
 
     let remote_name = format!("remote: {}", target);
-    let local_name = format!("local: {}", target);
+    let local_name = format!("local:  {}", target);
 
     let diff = TextDiff::from_lines(remote, local);
 
