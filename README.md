@@ -79,6 +79,8 @@ so you can delete each resource by setting `delete*` field to `true`, and apply 
 
 ## Required IAM permissions
 
+If you want to allow fubura fine-grained permissions, you can start with following policy.
+
 ```json
 {
   "Version": "2012-10-17",
