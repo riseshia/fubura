@@ -119,7 +119,7 @@ mod test {
         actual.append_diff_op("HelloWorld", &DiffOp::AddStateTag);
         actual.append_diff_op(
             "HelloWorld",
-            &DiffOp::RemoteStateTag(vec!["tag".to_string()]),
+            &DiffOp::RemoveStateTag(vec!["tag".to_string()]),
         );
         actual.append_diff_op("HelloWorld", &DiffOp::CreateSchedule);
 

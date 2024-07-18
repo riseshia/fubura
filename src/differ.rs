@@ -52,7 +52,7 @@ pub fn format_config_diff(
             DiffOp::CreateState
             | DiffOp::UpdateState
             | DiffOp::AddStateTag
-            | DiffOp::RemoteStateTag(_) => {
+            | DiffOp::RemoveStateTag(_) => {
                 change_state = true;
             }
             DiffOp::DeleteState => {
@@ -237,7 +237,7 @@ fn build_sfn_tags_diff_ops(
             .into_iter()
             .map(|key| key.to_string())
             .collect();
-        required_ops.insert(DiffOp::RemoteStateTag(keys));
+        required_ops.insert(DiffOp::RemoveStateTag(keys));
     }
 
     let mut diff_ops: Vec<DiffOp> = required_ops.into_iter().collect();
@@ -322,7 +322,7 @@ mod test {
 
         assert_eq!(
             actual_ops,
-            vec![DiffOp::RemoteStateTag(vec!["key2".to_string()])]
+            vec![DiffOp::RemoveStateTag(vec!["key2".to_string()])]
         );
     }
 
@@ -391,7 +391,7 @@ mod test {
             actual_ops,
             vec![
                 DiffOp::AddStateTag,
-                DiffOp::RemoteStateTag(vec!["remote_only_key".to_string()])
+                DiffOp::RemoveStateTag(vec!["remote_only_key".to_string()])
             ]
         );
     }
