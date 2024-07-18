@@ -18,6 +18,7 @@ pub struct DiffResult {
     // diff_ops list used for report to user. tag api are merged into update_state
     pub diff_ops: Vec<DiffOpsForSs>,
     // diff_ops list used for apply. which know about tags
+    #[serde(skip_serializing)]
     pub detail_diff_ops: Vec<DiffOpsForSs>,
     pub no_change: bool,
     pub summary: HashMap<OpName, usize>,
