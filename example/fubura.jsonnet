@@ -3,7 +3,6 @@
     {
       state: {
         name: 'fubura-example',
-        status: 'ACTIVE',
         definition: {
           StartAt: 'RunTask',
           States: {

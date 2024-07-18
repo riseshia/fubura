@@ -191,7 +191,6 @@ mod test {
                         "loggingConfiguration": null,
                         "tracingConfiguration": null,
                         "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                        "status": null,
                         "tags": [
                             {
                                 "key": "Name",
@@ -314,7 +313,6 @@ mod test {
                         "loggingConfiguration": null,
                         "tracingConfiguration": null,
                         "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                        "status": null,
                         "tags": [
                             {
                                 "key": "Name",

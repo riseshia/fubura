@@ -191,7 +191,6 @@ impl From<StateMachineType> for aws_sdk_sfn::types::StateMachineType {
 #[serde(rename_all = "camelCase")]
 pub struct StateMachine {
     pub name: String,
-    pub status: Option<String>,
     pub definition: Value,
     pub role_arn: String,
     pub r#type: StateMachineType,
@@ -210,7 +209,6 @@ impl StateMachine {
                 "StartAt": "FirstState",
             }),
             role_arn: "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
-            status: Some("ACTIVE".to_string()),
             logging_configuration: Some(LoggingConfiguration {
                 level: Some(LogLevel::All),
                 include_execution_data: Some(true),
@@ -240,7 +238,6 @@ impl From<aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineOu
     ) -> Self {
         StateMachine {
             name: value.name().to_string(),
-            status: value.status().map(|s| s.to_string()),
             definition: serde_json::from_str(value.definition()).unwrap(),
             role_arn: value.role_arn().to_string(),
             r#type: StateMachineType::from(value.r#type().clone()),
