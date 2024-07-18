@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::ResourceTag;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub enum FlexibleTimeWindowMode {
     #[serde(rename = "OFF")]
     Off,
@@ -34,7 +34,7 @@ impl From<FlexibleTimeWindowMode> for aws_sdk_scheduler::types::FlexibleTimeWind
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FlexibleTimeWindow {
     pub mode: FlexibleTimeWindowMode,
@@ -60,7 +60,7 @@ impl From<FlexibleTimeWindow> for aws_sdk_scheduler::types::FlexibleTimeWindow {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct DeadLetterConfig {
     pub arn: Option<String>,
 }
@@ -79,7 +79,7 @@ impl From<DeadLetterConfig> for aws_sdk_scheduler::types::DeadLetterConfig {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CapacityProviderStrategyItem {
     pub base: i32,
@@ -108,7 +108,7 @@ impl From<CapacityProviderStrategyItem> for aws_sdk_scheduler::types::CapacityPr
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub enum AssignPublicIp {
     #[serde(rename = "DISABLED")]
     Disabled,
@@ -135,7 +135,7 @@ impl From<AssignPublicIp> for aws_sdk_scheduler::types::AssignPublicIp {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AwsVpcConfiguration {
     pub assign_public_ip: Option<AssignPublicIp>,
@@ -172,7 +172,7 @@ impl From<AwsVpcConfiguration> for aws_sdk_scheduler::types::AwsVpcConfiguration
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkConfiguration {
     pub awsvpc_configuration: AwsVpcConfiguration,
@@ -196,7 +196,7 @@ impl From<NetworkConfiguration> for aws_sdk_scheduler::types::NetworkConfigurati
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum PlacementConstraintType {
     MemberOf,
@@ -230,7 +230,7 @@ impl From<PlacementConstraintType> for aws_sdk_scheduler::types::PlacementConstr
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct PlacementConstraint {
     pub expression: Option<String>,
     pub r#type: Option<PlacementConstraintType>,
@@ -256,7 +256,7 @@ impl From<PlacementConstraint> for aws_sdk_scheduler::types::PlacementConstraint
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub enum PlacementStrategyType {
     #[serde(rename = "random")]
     Random,
@@ -299,7 +299,7 @@ impl From<PlacementStrategyType> for aws_sdk_scheduler::types::PlacementStrategy
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct PlacementStrategy {
     pub field: Option<String>,
     pub r#type: Option<PlacementStrategyType>,
@@ -328,7 +328,7 @@ impl From<PlacementStrategy> for aws_sdk_scheduler::types::PlacementStrategy {
 type PlacementConstraintList = Vec<PlacementConstraint>;
 type PlacementStrategyList = Vec<PlacementStrategy>;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub enum LaunchType {
     #[serde(rename = "EC2")]
     Ec2,
@@ -359,7 +359,7 @@ impl From<LaunchType> for aws_sdk_scheduler::types::LaunchType {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub enum PropagateTags {
     #[serde(rename = "TASK_DEFINITION")]
     TaskDefinition,
@@ -386,7 +386,7 @@ impl From<PropagateTags> for aws_sdk_scheduler::types::PropagateTags {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EcsParameters {
     pub task_definition_arn: String,
@@ -483,7 +483,7 @@ impl From<EcsParameters> for aws_sdk_scheduler::types::EcsParameters {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct KinesisParameters {
     pub partition_key: String,
@@ -506,7 +506,7 @@ impl From<KinesisParameters> for aws_sdk_scheduler::types::KinesisParameters {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RetryPolicy {
     pub maximum_event_age_in_seconds: Option<i32>,
@@ -531,7 +531,7 @@ impl From<RetryPolicy> for aws_sdk_scheduler::types::RetryPolicy {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct SageMakerPipelineParameter {
     pub name: String,
     pub value: String,
@@ -558,7 +558,7 @@ impl From<SageMakerPipelineParameter> for aws_sdk_scheduler::types::SageMakerPip
 
 type SageMakerPipelineParameterList = Vec<SageMakerPipelineParameter>;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SageMakerPipelineParameters {
     pub pipeline_parameter_list: SageMakerPipelineParameterList,
@@ -590,7 +590,7 @@ impl From<SageMakerPipelineParameters> for aws_sdk_scheduler::types::SageMakerPi
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SqsParameters {
     pub message_group_id: Option<String>,
@@ -612,7 +612,7 @@ impl From<SqsParameters> for aws_sdk_scheduler::types::SqsParameters {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EventBridgeParameters {
     pub detail_type: String,
@@ -638,7 +638,7 @@ impl From<EventBridgeParameters> for aws_sdk_scheduler::types::EventBridgeParame
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ScheduleTarget {
     pub arn: String,
@@ -700,7 +700,7 @@ impl From<ScheduleTarget> for aws_sdk_scheduler::types::Target {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub enum ScheduleState {
     #[serde(rename = "ENABLED")]
     Enabled,
@@ -727,7 +727,7 @@ impl From<ScheduleState> for aws_sdk_scheduler::types::ScheduleState {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Schedule {
     // AWS handles request with default group if it omitted, so actually we don't need to do this.

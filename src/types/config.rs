@@ -6,7 +6,7 @@ use crate::{cli::StrKeyVal, jsonnet_evaluator};
 
 use super::SsConfig;
 
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, PartialEq, Eq, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     pub ss_configs: Vec<SsConfig>,

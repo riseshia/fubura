@@ -72,7 +72,11 @@ mod test {
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
     };
     use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder;
-    use aws_sdk_sfn::types::builders::TagBuilder;
+    use aws_sdk_sfn::types::builders::{
+        CloudWatchLogsLogGroupBuilder, LogDestinationBuilder, LoggingConfigurationBuilder,
+        TagBuilder,
+    };
+    use aws_sdk_sfn::types::LogLevel;
     use aws_sdk_sfn::{
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
         primitives::{DateTime, DateTimeFormat},
@@ -113,6 +117,21 @@ mod test {
                     .definition("{ \"StartAt\": \"FirstState\" }".to_string())
                     .role_arn(
                         "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
+                    )
+                    .logging_configuration(
+                        LoggingConfigurationBuilder::default()
+                            .level(LogLevel::All)
+                            .include_execution_data(true)
+                            .destinations(
+                                LogDestinationBuilder::default()
+                                    .cloud_watch_logs_log_group(
+                                        CloudWatchLogsLogGroupBuilder::default()
+                                            .log_group_arn("arn:aws:logs:us-west-2:123456789012:log-group:HelloWorldLogGroup")
+                                            .build(),
+                                    )
+                                    .build(),
+                            )
+                            .build(),
                     )
                     .creation_date(
                         DateTime::from_str("2021-01-01T00:00:00Z", DateTimeFormat::DateTime)
@@ -174,59 +193,21 @@ mod test {
         )
         .await;
 
-        let config =
+        let config_str =
             std::fs::read_to_string(imported_config_path).expect("imported config not found");
-        let v: Value = serde_json::from_str(&config).expect("imported config is not valid json");
+        let actual_config: Config =
+            serde_json::from_str(&config_str).expect("imported config is not valid json");
 
-        similar_asserts::assert_eq!(
-            v,
-            serde_json::json!({
-                "ssConfigs": [{
-                    "state": {
-                        "name": "HelloWorld",
-                        "type": "STANDARD",
-                        "definition": {
-                            "StartAt": "FirstState"
-                        },
-                        "loggingConfiguration": null,
-                        "tracingConfiguration": null,
-                        "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                        "tags": [
-                            {
-                                "key": "Name",
-                                "value": "HelloWorld"
-                            }
-                        ]
-                    },
-                    "schedule": {
-                        "groupName": "default",
-                        "name": "HelloWorld",
-                        "description": "HellowWorld schedule",
-                        "endDate": null,
-                        "startDate": null,
-                        "flexibleTimeWindow": null,
-                        "kmsKeyArn": null,
-                        "scheduleExpression": "rate(1 minute)",
-                        "scheduleExpressionTimezone": "UTC",
-                        "state": "ENABLED",
-                        "target": {
-                            "arn": "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
-                            "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                            "deadLetterConfig": null,
-                            "ecsParameters": null,
-                            "eventBridgeParameters": null,
-                            "input": null,
-                            "kinesisParameters": null,
-                            "retryPolicy": null,
-                            "sageMakerPipelineParameters": null,
-                            "sqsParameters": null,
-                        },
-                    },
-                    "deleteAll": false,
-                    "deleteSchedule": false,
-                }
-            ]})
-        );
+        let expected_config = Config {
+            ss_configs: vec![SsConfig {
+                state: StateMachine::test_default(),
+                schedule: Some(Schedule::test_default()),
+                delete_all: false,
+                delete_schedule: false,
+            }],
+        };
+
+        similar_asserts::assert_eq!(actual_config, expected_config);
     }
 
     #[tokio::test]

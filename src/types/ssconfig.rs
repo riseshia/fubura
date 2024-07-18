@@ -6,7 +6,7 @@ fn default_delete_flag() -> bool {
     false
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SsConfig {
     pub state: StateMachine,

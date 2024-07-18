@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use super::ResourceTag;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudWatchLogsLogGroup {
     pub log_group_arn: Option<String>,
@@ -29,7 +29,7 @@ impl From<CloudWatchLogsLogGroup> for aws_sdk_sfn::types::CloudWatchLogsLogGroup
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LogDestination {
     pub cloud_watch_logs_log_group: Option<CloudWatchLogsLogGroup>,
@@ -57,7 +57,7 @@ impl From<LogDestination> for aws_sdk_sfn::types::LogDestination {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub enum LogLevel {
     #[serde(rename = "ALL")]
     All,
@@ -92,7 +92,7 @@ impl From<LogLevel> for aws_sdk_sfn::types::LogLevel {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LoggingConfiguration {
     pub level: Option<LogLevel>,
@@ -139,7 +139,7 @@ impl From<LoggingConfiguration> for aws_sdk_sfn::types::LoggingConfiguration {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct TracingConfiguration {
     pub enabled: bool,
 }
@@ -160,7 +160,7 @@ impl From<TracingConfiguration> for aws_sdk_sfn::types::TracingConfiguration {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub enum StateMachineType {
     #[serde(rename = "STANDARD")]
     Standard,
@@ -187,7 +187,7 @@ impl From<StateMachineType> for aws_sdk_sfn::types::StateMachineType {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StateMachine {
     pub name: String,

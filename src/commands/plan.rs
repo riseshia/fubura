@@ -73,7 +73,11 @@ mod test {
     use aws_sdk_sfn::error::SdkError;
     use aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineError;
     use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder;
-    use aws_sdk_sfn::types::builders::TagBuilder;
+    use aws_sdk_sfn::types::builders::{
+        CloudWatchLogsLogGroupBuilder, LogDestinationBuilder, LoggingConfigurationBuilder,
+        TagBuilder,
+    };
+    use aws_sdk_sfn::types::LogLevel;
     use aws_sdk_sfn::{
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
         primitives::{DateTime, DateTimeFormat},
@@ -114,6 +118,21 @@ mod test {
                     .definition("{ \"StartAt\": \"FirstState\" }".to_string())
                     .role_arn(
                         "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
+                    )
+                    .logging_configuration(
+                        LoggingConfigurationBuilder::default()
+                            .level(LogLevel::All)
+                            .include_execution_data(true)
+                            .destinations(
+                                LogDestinationBuilder::default()
+                                    .cloud_watch_logs_log_group(
+                                        CloudWatchLogsLogGroupBuilder::default()
+                                            .log_group_arn("arn:aws:logs:us-west-2:123456789012:log-group:HelloWorldLogGroup")
+                                            .build(),
+                                    )
+                                    .build(),
+                            )
+                            .build(),
                     )
                     .creation_date(
                         DateTime::from_str("2021-01-01T00:00:00Z", DateTimeFormat::DateTime)
@@ -163,55 +182,17 @@ mod test {
                     .build())
             });
 
-        let ss_config_json = serde_json::json!({
-            "ssConfigs": [{
-                "state": {
-                    "name": "HelloWorld",
-                    "type": "STANDARD",
-                    "definition": {
-                        "StartAt": "FirstState"
-                    },
-                    "description": null,
-                    "loggingConfiguration": null,
-                    "tracingConfiguration": null,
-                    "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                    "status": null,
-                    "tags": [
-                        {
-                            "key": "Name",
-                            "value": "HelloWorld"
-                        }
-                    ]
-                },
-                "schedule": {
-                    "groupName": "default",
-                    "name": "HelloWorld",
-                    "description": "HellowWorld schedule",
-                    "endDate": null,
-                    "startDate": null,
-                    "flexibleTimeWindow": null,
-                    "kmsKeyArn": null,
-                    "scheduleExpression": "rate(1 minute)",
-                    "scheduleExpressionTimezone": "UTC",
-                    "state": "ENABLED",
-                    "target": {
-                        "arn": "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
-                        "roleArn": "arn:aws:iam::123456789012:role/service-role/HelloWorldRole",
-                        "deadLetterConfig": null,
-                        "ecsParameters": null,
-                        "eventBridgeParameters": null,
-                        "input": null,
-                        "kinesisParameters": null,
-                        "retryPolicy": null,
-                        "sageMakerPipelineParameters": null,
-                        "sqsParameters": null,
-                    },
-                }
-            }]
-        });
-        let config: Config = serde_json::from_value(ss_config_json).unwrap();
+        let config = Config {
+            ss_configs: vec![SsConfig {
+                state: StateMachine::test_default(),
+                schedule: Some(Schedule::test_default()),
+                delete_all: false,
+                delete_schedule: false,
+            }],
+        };
 
-        PlanCommand::run(&context, &config).await;
+        let diff_result = PlanCommand::run(&context, &config).await;
+        assert!(diff_result.no_change);
     }
 
     #[tokio::test]
