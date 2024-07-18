@@ -4,6 +4,16 @@ use crate::{scheduler, sfn, sts};
 
 pub struct ImportCommand;
 
+fn ensure_not_exist_in_config(config: &Config, sfn_name: &str) {
+    if config
+        .ss_configs
+        .iter()
+        .any(|ss_config| ss_config.state.name == sfn_name)
+    {
+        panic!("state machine '{}' already exists in config", sfn_name);
+    }
+}
+
 impl ImportCommand {
     pub async fn run(
         context: &Context,
@@ -12,6 +22,8 @@ impl ImportCommand {
         sfn_name: &str,
         schedule_name_with_group: &Option<String>,
     ) {
+        ensure_not_exist_in_config(&config, sfn_name);
+
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
         let state_arn = format!("{}{}", state_arn_prefix, sfn_name);
 
@@ -52,6 +64,8 @@ impl ImportCommand {
 
 #[cfg(test)]
 mod test {
+    use crate::types::{Schedule, StateMachine};
+
     use super::*;
 
     use aws_sdk_scheduler::{
@@ -314,5 +328,30 @@ mod test {
                 }
             ]})
         );
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "state machine 'HelloWorld' already exists in config")]
+    async fn test_import_fail_with_already_exists() {
+        let context = Context::async_default().await;
+
+        let imported_config_path = "tmp/test-import-fail-with-already-exists.jsonnet";
+        std::fs::remove_file(imported_config_path).ok();
+
+        let config = Config {
+            ss_configs: vec![SsConfig {
+                state: StateMachine::test_default(),
+                schedule: Some(Schedule::test_default()),
+                delete_all: false,
+                delete_schedule: false,
+            }],
+        };
+        std::fs::write(
+            imported_config_path,
+            serde_json::to_string_pretty(&config).unwrap(),
+        )
+        .unwrap();
+
+        ImportCommand::run(&context, imported_config_path, config, "HelloWorld", &None).await;
     }
 }
