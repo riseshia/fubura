@@ -51,9 +51,6 @@ impl DiffResult {
         self.add_detail_diff_op(state_name, diff_op);
         self.add_diff_op(state_name, diff_op);
 
-        self.summary
-            .entry(diff_op.op_type().to_string())
-            .and_modify(|e| *e += 1);
         self.no_change = false;
     }
 
@@ -86,6 +83,8 @@ impl DiffResult {
         if let Some(diff_op_for_ss) = diff_op_for_ss {
             if !diff_op_for_ss.diff_ops.contains(diff_op) {
                 diff_op_for_ss.diff_ops.push(diff_op.clone());
+
+                self.add_summary(diff_op);
             }
         } else {
             let diff_op_for_ss = DiffOpsForSs {
@@ -93,6 +92,43 @@ impl DiffResult {
                 diff_ops: vec![diff_op.clone()],
             };
             self.diff_ops.push(diff_op_for_ss);
+            self.add_summary(diff_op);
         }
+    }
+
+    fn add_summary(&mut self, diff_op: &DiffOp) {
+        self.summary
+            .entry(diff_op.op_type().to_string())
+            .and_modify(|e| *e += 1);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_summary() {
+        let mut actual = DiffResult::default();
+
+        actual.append_diff_op("NewBatch", &DiffOp::CreateState);
+        actual.append_diff_op("HelloWorld", &DiffOp::UpdateState);
+        actual.append_diff_op("HelloWorld", &DiffOp::AddStateTag);
+        actual.append_diff_op(
+            "HelloWorld",
+            &DiffOp::RemoteStateTag(vec!["tag".to_string()]),
+        );
+        actual.append_diff_op("HelloWorld", &DiffOp::CreateSchedule);
+
+        let expected = HashMap::from([
+            ("create_state".to_string(), 1),
+            ("update_state".to_string(), 1),
+            ("delete_state".to_string(), 0),
+            ("create_schedule".to_string(), 1),
+            ("update_schedule".to_string(), 0),
+            ("delete_schedule".to_string(), 0),
+        ]);
+
+        similar_asserts::assert_eq!(expected, actual.summary);
     }
 }
