@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Context, Result};
 
 use crate::context::FuburaContext;
 use crate::types::{Config, SsConfig};
@@ -6,14 +6,15 @@ use crate::{scheduler, sfn, sts};
 
 pub struct ImportCommand;
 
-fn ensure_not_exist_in_config(config: &Config, sfn_name: &str) {
+fn ensure_not_exist_in_config(config: &Config, sfn_name: &str) -> Result<()> {
     if config
         .ss_configs
         .iter()
         .any(|ss_config| ss_config.state.name == sfn_name)
     {
-        panic!("state machine '{}' already exists in config", sfn_name);
+        bail!("state machine '{}' already exists in config", sfn_name);
     }
+    Ok(())
 }
 
 impl ImportCommand {
@@ -24,20 +25,20 @@ impl ImportCommand {
         sfn_name: &str,
         schedule_name_with_group: &Option<String>,
     ) -> Result<()> {
-        ensure_not_exist_in_config(&config, sfn_name);
+        ensure_not_exist_in_config(&config, sfn_name)?;
 
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
         let state_arn = format!("{}{}", state_arn_prefix, sfn_name);
 
         let state_machine = sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn)
             .await
-            .unwrap_or_else(|| panic!("state machine not found: {}", state_arn));
+            .with_context(|| format!("state machine not found: {}", state_arn))?;
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
             let schedule =
                 scheduler::get_schedule(&context.scheduler_client, schedule_name_with_group)
                     .await
-                    .unwrap_or_else(|| panic!("schedule not found: {}", state_arn));
+                    .with_context(|| format!("schedule not found: {}", state_arn))?;
 
             Some(schedule)
         } else {
@@ -53,14 +54,7 @@ impl ImportCommand {
 
         config.ss_configs.push(ss_config);
 
-        std::fs::write(config_path, serde_json::to_string_pretty(&config).unwrap()).unwrap_or_else(
-            |e| {
-                panic!(
-                    "failed to write config to file '{}' with error: {}",
-                    config_path, e
-                )
-            },
-        );
+        std::fs::write(config_path, serde_json::to_string_pretty(&config).unwrap())?;
 
         Ok(())
     }

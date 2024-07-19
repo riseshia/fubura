@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 
 use crate::context::FuburaContext;
 use crate::differ::diff;
@@ -37,7 +37,7 @@ Enter a value: "#
             let response: String = read!("{}\n");
 
             if response != "yes" {
-                panic!("apply cancelled!");
+                bail!("apply cancelled!");
             }
         }
 
