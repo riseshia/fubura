@@ -1,0 +1,21 @@
+name: release build
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rust-build/rust-build.action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUSTTARGET: ${{ matrix.target }}
