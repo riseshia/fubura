@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use anyhow::Result;
+
 use crate::context::Context;
 use crate::differ::{build_diff_ops, format_config_diff};
 use crate::types::{Config, DiffOp, DiffResult, SsConfig};
@@ -8,7 +10,7 @@ use crate::{scheduler, sfn, sts};
 pub struct ApplyCommand;
 
 impl ApplyCommand {
-    pub async fn run(context: &Context, auto_approve: &bool, config: &Config) -> DiffResult {
+    pub async fn run(context: &Context, auto_approve: &bool, config: &Config) -> Result<()> {
         let mut diff_result = DiffResult::default();
         let ss_config_by_name: HashMap<String, &SsConfig> = HashMap::from_iter(
             config
@@ -118,6 +120,6 @@ Enter a value: "#
             }
         }
 
-        diff_result
+        Ok(())
     }
 }

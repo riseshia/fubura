@@ -13,7 +13,7 @@ use fubura::types::Config;
 async fn main() {
     let cli = Cli::parse();
 
-    match &cli.command {
+    let result = match &cli.command {
         Commands::Apply {
             auto_approve,
             config_path,
@@ -24,7 +24,7 @@ async fn main() {
             let mut context = Context::async_default().await;
             context.targets.clone_from(target);
 
-            ApplyCommand::run(&context, auto_approve, &config).await;
+            ApplyCommand::run(&context, auto_approve, &config).await
         }
         Commands::Plan {
             config_path,
@@ -37,7 +37,7 @@ async fn main() {
             context.targets.clone_from(target);
             context.json_diff_path.clone_from(json_diff_path);
 
-            PlanCommand::run(&context, &config).await;
+            PlanCommand::run(&context, &config).await
         }
         Commands::Import {
             config_path,
@@ -61,7 +61,12 @@ async fn main() {
                 sfn_name,
                 schedule_name_with_group,
             )
-            .await;
+            .await
         }
+    };
+
+    if let Err(e) = result {
+        eprintln!("{}", e);
+        std::process::exit(1);
     }
 }

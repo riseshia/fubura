@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::context::Context;
 use crate::types::{Config, SsConfig};
 use crate::{scheduler, sfn, sts};
@@ -21,7 +23,7 @@ impl ImportCommand {
         mut config: Config,
         sfn_name: &str,
         schedule_name_with_group: &Option<String>,
-    ) {
+    ) -> Result<()> {
         ensure_not_exist_in_config(&config, sfn_name);
 
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
@@ -59,6 +61,8 @@ impl ImportCommand {
                 )
             },
         );
+
+        Ok(())
     }
 }
 
@@ -189,7 +193,8 @@ mod test {
             "HelloWorld",
             &Some("default/HelloWorld".to_string()),
         )
-        .await;
+        .await
+        .unwrap();
 
         let config_str =
             std::fs::read_to_string(imported_config_path).expect("imported config not found");
@@ -288,7 +293,8 @@ mod test {
             "HelloWorld",
             &None,
         )
-        .await;
+        .await
+        .unwrap();
 
         let config_str =
             std::fs::read_to_string(imported_config_path).expect("imported config not found");
@@ -328,6 +334,8 @@ mod test {
         )
         .unwrap();
 
-        ImportCommand::run(&context, imported_config_path, config, "HelloWorld", &None).await;
+        ImportCommand::run(&context, imported_config_path, config, "HelloWorld", &None)
+            .await
+            .unwrap();
     }
 }

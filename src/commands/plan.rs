@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::context::Context;
 use crate::differ::{build_diff_ops, format_config_diff};
 use crate::types::{Config, DiffResult};
@@ -6,50 +8,9 @@ use crate::{scheduler, sfn, sts};
 pub struct PlanCommand;
 
 impl PlanCommand {
-    pub async fn run(context: &Context, config: &Config) -> DiffResult {
-        let mut diff_result = DiffResult::default();
-
-        let state_arn_prefix = sts::build_state_arn_prefix(context).await;
-
-        let target_ss_configs = config.target_ss_configs(&context.targets);
-
-        for ss_config in target_ss_configs {
-            let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
-
-            let remote_state =
-                sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
-
-            let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
-                scheduler::get_schedule(
-                    &context.scheduler_client,
-                    &schedule_config.schedule_name_with_group(),
-                )
-                .await
-            } else {
-                None
-            };
-
-            let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
-            for diff_op in diff_ops.iter() {
-                diff_result.append_diff_op(&ss_config.state.name, diff_op)
-            }
-
-            let text_diff =
-                format_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
-            println!("{}", &text_diff);
-            diff_result.append_text_diff(text_diff);
-        }
-
-        println!("\nFubura will:");
-        for (op, count) in diff_result.summary.iter() {
-            println!("    {}: {}", op, count);
-        }
-
-        if let Some(json_diff_path) = &context.json_diff_path {
-            write_result_to_path(json_diff_path, &diff_result);
-        }
-
-        diff_result
+    pub async fn run(context: &Context, config: &Config) -> Result<()> {
+        plan(context, config).await?;
+        Ok(())
     }
 }
 
@@ -58,6 +19,51 @@ fn write_result_to_path(output_path: &str, diff_result: &DiffResult) {
     std::fs::write(output_path, json_diff).unwrap_or_else(|_| {
         panic!("Failed to write diff result to {}", output_path);
     });
+}
+
+async fn plan(context: &Context, config: &Config) -> Result<DiffResult> {
+    let mut diff_result = DiffResult::default();
+
+    let state_arn_prefix = sts::build_state_arn_prefix(context).await;
+
+    let target_ss_configs = config.target_ss_configs(&context.targets);
+
+    for ss_config in target_ss_configs {
+        let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
+
+        let remote_state =
+            sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
+
+        let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
+            scheduler::get_schedule(
+                &context.scheduler_client,
+                &schedule_config.schedule_name_with_group(),
+            )
+            .await
+        } else {
+            None
+        };
+
+        let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
+        for diff_op in diff_ops.iter() {
+            diff_result.append_diff_op(&ss_config.state.name, diff_op)
+        }
+
+        let text_diff = format_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
+        println!("{}", &text_diff);
+        diff_result.append_text_diff(text_diff);
+    }
+
+    println!("\nFubura will:");
+    for (op, count) in diff_result.summary.iter() {
+        println!("    {}: {}", op, count);
+    }
+
+    if let Some(json_diff_path) = &context.json_diff_path {
+        write_result_to_path(json_diff_path, &diff_result);
+    }
+
+    Ok(diff_result)
 }
 
 #[cfg(test)]
@@ -191,7 +197,7 @@ mod test {
             }],
         };
 
-        let diff_result = PlanCommand::run(&context, &config).await;
+        let diff_result = plan(&context, &config).await.unwrap();
         assert!(diff_result.no_change);
     }
 
@@ -248,7 +254,7 @@ mod test {
             }],
         };
 
-        let mut actual_diff_result = PlanCommand::run(&context, &config).await;
+        let mut actual_diff_result = plan(&context, &config).await.unwrap();
         actual_diff_result.text_diff.clear(); // do not check text_diff
         let mut expected_diff_result = DiffResult::default();
         expected_diff_result.append_diff_op("HelloWorld", &DiffOp::CreateState);
