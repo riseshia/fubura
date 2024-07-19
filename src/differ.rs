@@ -5,7 +5,7 @@ use console::Style;
 use similar::{ChangeTag, TextDiff};
 
 use crate::{
-    context::Context,
+    context::FuburaContext,
     scheduler, sfn, sts,
     types::{Config, DiffOp, DiffResult, ResourceTag, Schedule, SsConfig, StateMachine},
 };
@@ -250,7 +250,7 @@ fn build_sfn_tags_diff_ops(
     diff_ops
 }
 
-pub async fn diff(context: &Context, config: &Config) -> Result<DiffResult> {
+pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult> {
     let mut diff_result = DiffResult::default();
 
     let state_arn_prefix = sts::build_state_arn_prefix(context).await;
@@ -610,7 +610,7 @@ mod test {
 
     #[tokio::test]
     async fn test_no_diff() {
-        let mut context = Context::async_default().await;
+        let mut context = FuburaContext::async_default().await;
 
         context
             .sts_client
@@ -716,7 +716,7 @@ mod test {
 
     #[tokio::test]
     async fn test_create_state_and_schedule() {
-        let mut context = Context::async_default().await;
+        let mut context = FuburaContext::async_default().await;
 
         context
             .sts_client

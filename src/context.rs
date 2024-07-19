@@ -2,7 +2,7 @@ use crate::scheduler::Scheduler;
 use crate::sfn::Sfn;
 use crate::sts::Sts;
 
-pub struct Context {
+pub struct FuburaContext {
     pub scheduler_client: Scheduler,
     pub sfn_client: Sfn,
     pub sts_client: Sts,
@@ -11,7 +11,7 @@ pub struct Context {
     pub json_diff_path: Option<String>,
 }
 
-impl Context {
+impl FuburaContext {
     #[cfg(not(test))]
     pub async fn async_default() -> Self {
         use aws_config::BehaviorVersion;

@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::context::Context;
+use crate::context::FuburaContext;
 use crate::types::{Config, SsConfig};
 use crate::{scheduler, sfn, sts};
 
@@ -18,7 +18,7 @@ fn ensure_not_exist_in_config(config: &Config, sfn_name: &str) {
 
 impl ImportCommand {
     pub async fn run(
-        context: &Context,
+        context: &FuburaContext,
         config_path: &str,
         mut config: Config,
         sfn_name: &str,
@@ -92,7 +92,7 @@ mod test {
 
     #[tokio::test]
     async fn test_sfn_name_schedule_name_given() {
-        let mut context = Context::async_default().await;
+        let mut context = FuburaContext::async_default().await;
 
         context
             .sts_client
@@ -215,7 +215,7 @@ mod test {
 
     #[tokio::test]
     async fn test_sfn_name_given() {
-        let mut context = Context::async_default().await;
+        let mut context = FuburaContext::async_default().await;
 
         context
             .sts_client
@@ -315,7 +315,7 @@ mod test {
     #[tokio::test]
     #[should_panic(expected = "state machine 'HelloWorld' already exists in config")]
     async fn test_import_fail_with_already_exists() {
-        let context = Context::async_default().await;
+        let context = FuburaContext::async_default().await;
 
         let imported_config_path = "tmp/test-import-fail-with-already-exists.jsonnet";
         std::fs::remove_file(imported_config_path).ok();

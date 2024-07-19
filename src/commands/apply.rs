@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 
-use crate::context::Context;
+use crate::context::FuburaContext;
 use crate::differ::diff;
 use crate::types::{Config, DiffOp, SsConfig};
 use crate::{scheduler, sfn, sts};
@@ -10,7 +10,7 @@ use crate::{scheduler, sfn, sts};
 pub struct ApplyCommand;
 
 impl ApplyCommand {
-    pub async fn run(context: &Context, auto_approve: &bool, config: &Config) -> Result<()> {
+    pub async fn run(context: &FuburaContext, auto_approve: &bool, config: &Config) -> Result<()> {
         let ss_config_by_name: HashMap<String, &SsConfig> = HashMap::from_iter(
             config
                 .ss_configs

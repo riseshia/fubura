@@ -1,13 +1,13 @@
 use anyhow::Result;
 
-use crate::context::Context;
+use crate::context::FuburaContext;
 use crate::differ::diff;
 use crate::types::{Config, DiffResult};
 
 pub struct PlanCommand;
 
 impl PlanCommand {
-    pub async fn run(context: &Context, config: &Config) -> Result<()> {
+    pub async fn run(context: &FuburaContext, config: &Config) -> Result<()> {
         let diff_result = diff(context, config).await?;
 
         if let Some(json_diff_path) = &context.json_diff_path {

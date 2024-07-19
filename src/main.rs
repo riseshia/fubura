@@ -6,7 +6,7 @@ use fubura::cli::{Cli, Commands};
 use fubura::commands::apply::ApplyCommand;
 use fubura::commands::import::ImportCommand;
 use fubura::commands::plan::PlanCommand;
-use fubura::context::Context;
+use fubura::context::FuburaContext;
 use fubura::types::Config;
 
 #[tokio::main]
@@ -21,7 +21,7 @@ async fn main() {
             target,
         } => {
             let config = Config::load_from_path(config_path, ext_str);
-            let mut context = Context::async_default().await;
+            let mut context = FuburaContext::async_default().await;
             context.targets.clone_from(target);
 
             ApplyCommand::run(&context, auto_approve, &config).await
@@ -33,7 +33,7 @@ async fn main() {
             json_diff_path,
         } => {
             let config = Config::load_from_path(config_path, ext_str);
-            let mut context = Context::async_default().await;
+            let mut context = FuburaContext::async_default().await;
             context.targets.clone_from(target);
             context.json_diff_path.clone_from(json_diff_path);
 
@@ -52,7 +52,7 @@ async fn main() {
                 Config::default()
             };
 
-            let context = Context::async_default().await;
+            let context = FuburaContext::async_default().await;
 
             ImportCommand::run(
                 &context,
