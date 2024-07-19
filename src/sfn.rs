@@ -216,7 +216,7 @@ pub async fn tag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) -
     let res = client.tag_resource(state_arn, tags).await;
 
     if let Err(e) = res {
-        format!("failed to tag resource with error: {}", e);
+        bail!("failed to tag resource with error: {}", e);
     }
 
     Ok(())
@@ -226,7 +226,7 @@ pub async fn untag_resource(client: &Sfn, state_arn: &str, tags: &[String]) -> R
     let res = client.untag_resource(state_arn, tags).await;
 
     if let Err(e) = res {
-        format!("failed to untag resource with error: {}", e);
+        bail!("failed to untag resource with error: {}", e);
     }
 
     Ok(())
