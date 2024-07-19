@@ -32,6 +32,24 @@ brew install rieshia/x/fubura
 
 or you can download the code from the [release page](https://github.com/riseshia/fubura/releases) and compile from it.
 
+### GitHub Action
+
+XXX: to be supported
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: riseshia/fubura@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_ACCESS_TOKEN }}
+      - uses: softprops/action-gh-release@v2
+      end
+```
+
+
 ## How to use
 
 ```
