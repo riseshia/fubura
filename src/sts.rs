@@ -39,7 +39,8 @@ async fn get_caller_identity(client: &Sts) -> CallerIdentity {
     match res {
         Ok(output) => CallerIdentity::from(output),
         Err(err) => {
-            panic!("failed to get caller identity: {}", err);
+            eprintln!("failed to get caller identity: {}", err);
+            std::process::exit(1);
         }
     }
 }
