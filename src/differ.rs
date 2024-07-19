@@ -268,7 +268,7 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
                 &context.scheduler_client,
                 &schedule_config.schedule_name_with_group(),
             )
-            .await
+            .await?
         } else {
             None
         };

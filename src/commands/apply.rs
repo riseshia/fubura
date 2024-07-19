@@ -75,17 +75,17 @@ Enter a value: "#
                     DiffOp::CreateSchedule => {
                         let schedule = ss_config.schedule.as_ref().unwrap();
                         println!("Creating schedule: {}", schedule.name);
-                        scheduler::create_schedule(&context.scheduler_client, schedule).await;
+                        scheduler::create_schedule(&context.scheduler_client, schedule).await?;
                     }
                     DiffOp::UpdateSchedule => {
                         let schedule = ss_config.schedule.as_ref().unwrap();
                         println!("Updating schedule: {}", schedule.name);
-                        scheduler::update_schedule(&context.scheduler_client, schedule).await;
+                        scheduler::update_schedule(&context.scheduler_client, schedule).await?;
                     }
                     DiffOp::DeleteSchedule => {
                         let schedule = ss_config.schedule.as_ref().unwrap();
                         println!("Deleting schedule: {}", schedule.name);
-                        scheduler::delete_schedule(&context.scheduler_client, schedule).await;
+                        scheduler::delete_schedule(&context.scheduler_client, schedule).await?;
                     }
                 }
             }

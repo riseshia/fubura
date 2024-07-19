@@ -35,12 +35,7 @@ impl ImportCommand {
             .with_context(|| format!("state machine not found: {}", state_arn))?;
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
-            let schedule =
-                scheduler::get_schedule(&context.scheduler_client, schedule_name_with_group)
-                    .await
-                    .with_context(|| format!("schedule not found: {}", state_arn))?;
-
-            Some(schedule)
+            scheduler::get_schedule(&context.scheduler_client, schedule_name_with_group).await?
         } else {
             None
         };

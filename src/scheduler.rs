@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use aws_sdk_scheduler as scheduler;
 use aws_sdk_scheduler::operation::create_schedule::{CreateScheduleError, CreateScheduleOutput};
 use aws_sdk_scheduler::operation::delete_schedule::{DeleteScheduleError, DeleteScheduleOutput};
@@ -93,48 +94,67 @@ impl SchedulerImpl {
     }
 }
 
-pub async fn create_schedule(client: &Scheduler, schedule: &Schedule) {
-    client.create_schedule(schedule).await.unwrap_or_else(|e| {
-        panic!(
+pub async fn create_schedule(client: &Scheduler, schedule: &Schedule) -> Result<()> {
+    let res = client.create_schedule(schedule).await;
+
+    if let Err(e) = res {
+        bail!(
             "failed to create schedule({}) with error: {}",
-            schedule.name, e
+            schedule.name,
+            e
         );
-    });
+    }
+
+    Ok(())
 }
 
-pub async fn update_schedule(client: &Scheduler, schedule: &Schedule) {
-    client.update_schedule(schedule).await.unwrap_or_else(|e| {
-        panic!("failed to update schedule with error: {}", e);
-    });
+pub async fn update_schedule(client: &Scheduler, schedule: &Schedule) -> Result<()> {
+    let res = client.update_schedule(schedule).await;
+
+    if let Err(e) = res {
+        bail!("failed to update schedule with error: {}", e);
+    }
+
+    Ok(())
 }
 
-pub async fn delete_schedule(client: &Scheduler, schedule: &Schedule) {
-    client.delete_schedule(schedule).await.unwrap_or_else(|e| {
-        panic!("failed to delete schedule with error: {}", e);
-    });
+pub async fn delete_schedule(client: &Scheduler, schedule: &Schedule) -> Result<()> {
+    let res = client.delete_schedule(schedule).await;
+
+    if let Err(e) = res {
+        bail!("failed to delete schedule with error: {}", e);
+    }
+
+    Ok(())
 }
 
-pub async fn get_schedule(client: &Scheduler, schedule_name_with_group: &str) -> Option<Schedule> {
-    let (group_name, schedule_name) =
-        schedule_name_with_group.split_once('/').unwrap_or_else(|| {
-            panic!(
-                "invalid schedule name with group: {:?}",
-                schedule_name_with_group
-            );
-        });
+pub async fn get_schedule(
+    client: &Scheduler,
+    schedule_name_with_group: &str,
+) -> Result<Option<Schedule>> {
+    let split_result = schedule_name_with_group.split_once('/');
+    let (group_name, schedule_name) = if let Some((group_name, schedule_name)) = split_result {
+        (group_name, schedule_name)
+    } else {
+        bail!(
+            "invalid schedule name with group: {:?}",
+            schedule_name_with_group
+        );
+    };
 
     let res = client.get_schedule(group_name, schedule_name).await;
 
-    match res {
+    let schedule = match res {
         Ok(output) => Some(Schedule::from(output)),
         Err(err) => {
             let service_error = err.into_service_error();
             if service_error.is_resource_not_found_exception() {
-                eprintln!("schedule does not exist: {}", schedule_name_with_group);
                 None
             } else {
-                panic!("failed to get schedule: {}", service_error);
+                bail!("failed to get schedule: {}", service_error);
             }
         }
-    }
+    };
+
+    Ok(schedule)
 }
