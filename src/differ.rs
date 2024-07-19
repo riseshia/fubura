@@ -261,7 +261,7 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
         let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
 
         let remote_state =
-            sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
+            sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await?;
 
         let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
             scheduler::get_schedule(

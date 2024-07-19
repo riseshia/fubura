@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 
 use crate::context::FuburaContext;
 use crate::types::{Config, SsConfig};
@@ -30,9 +30,13 @@ impl ImportCommand {
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
         let state_arn = format!("{}{}", state_arn_prefix, sfn_name);
 
-        let state_machine = sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn)
-            .await
-            .with_context(|| format!("state machine not found: {}", state_arn))?;
+        let state_machine =
+            sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await?;
+        let state_machine = if let Some(state_machine) = state_machine {
+            state_machine
+        } else {
+            bail!("state machine '{}' does not exist", sfn_name);
+        };
 
         let scheduler_config = if let Some(schedule_name_with_group) = schedule_name_with_group {
             scheduler::get_schedule(&context.scheduler_client, schedule_name_with_group).await?

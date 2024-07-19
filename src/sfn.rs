@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use aws_sdk_sfn as sfn;
 use aws_sdk_sfn::operation::create_state_machine::{
     CreateStateMachineError, CreateStateMachineOutput,
@@ -143,99 +144,114 @@ impl SfnImpl {
     }
 }
 
-pub async fn create_state_machine(client: &Sfn, state: &StateMachine) {
-    client
-        .create_state_machine(state)
-        .await
-        .unwrap_or_else(|e| {
-            panic!(
-                "failed to create state machine({}) with error: {}",
-                state.name, e
-            );
-        });
+pub async fn create_state_machine(client: &Sfn, state: &StateMachine) -> Result<()> {
+    let res = client.create_state_machine(state).await;
+
+    if let Err(e) = res {
+        bail!(
+            "failed to create state machine({}) with error: {}",
+            state.name,
+            e
+        );
+    }
+
+    Ok(())
 }
 
-pub async fn update_state_machine(client: &Sfn, state_arn: &str, state: &StateMachine) {
-    client
-        .update_state_machine(state_arn, state)
-        .await
-        .unwrap_or_else(|e| {
-            panic!(
-                "failed to update state machine({}) with error: {}",
-                state.name, e
-            );
-        });
+pub async fn update_state_machine(
+    client: &Sfn,
+    state_arn: &str,
+    state: &StateMachine,
+) -> Result<()> {
+    let res = client.update_state_machine(state_arn, state).await;
+
+    if let Err(e) = res {
+        bail!(
+            "failed to update state machine({}) with error: {}",
+            state.name,
+            e
+        );
+    }
+
+    Ok(())
 }
 
-pub async fn delete_state_machine(client: &Sfn, state_arn: &str) {
-    client
-        .delete_state_machine(state_arn)
-        .await
-        .unwrap_or_else(|e| {
-            panic!(
-                "failed to delete state machine({}) with error: {}",
-                state_arn, e
-            );
-        });
+pub async fn delete_state_machine(client: &Sfn, state_arn: &str) -> Result<()> {
+    let res = client.delete_state_machine(state_arn).await;
+
+    if let Err(e) = res {
+        bail!(
+            "failed to delete state machine({}) with error: {}",
+            state_arn,
+            e
+        );
+    }
+
+    Ok(())
 }
 
-async fn list_tags_for_resource(client: &Sfn, state_arn: &str) -> Vec<ResourceTag> {
+async fn list_tags_for_resource(client: &Sfn, state_arn: &str) -> Result<Vec<ResourceTag>> {
     let res = client.list_tags_for_resource(state_arn).await;
 
     match res {
         Ok(output) => {
             let tags = output.tags();
-            tags.iter()
+            let tags = tags
+                .iter()
                 .map(|tag| ResourceTag::from(tag.clone()))
-                .collect()
+                .collect();
+            Ok(tags)
         }
         Err(err) => {
-            panic!(
+            bail!(
                 "failed to list tags for resource({}) with error: {}",
-                state_arn, err
+                state_arn,
+                err
             );
         }
     }
 }
 
-pub async fn tag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) {
-    client
-        .tag_resource(state_arn, tags)
-        .await
-        .unwrap_or_else(|e| {
-            panic!("failed to tag resource with error: {}", e);
-        });
+pub async fn tag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) -> Result<()> {
+    let res = client.tag_resource(state_arn, tags).await;
+
+    if let Err(e) = res {
+        format!("failed to tag resource with error: {}", e);
+    }
+
+    Ok(())
 }
 
-pub async fn untag_resource(client: &Sfn, state_arn: &str, tags: &[String]) {
-    client
-        .untag_resource(state_arn, tags)
-        .await
-        .unwrap_or_else(|e| {
-            panic!("failed to untag resource with error: {}", e);
-        });
+pub async fn untag_resource(client: &Sfn, state_arn: &str, tags: &[String]) -> Result<()> {
+    let res = client.untag_resource(state_arn, tags).await;
+
+    if let Err(e) = res {
+        format!("failed to untag resource with error: {}", e);
+    }
+
+    Ok(())
 }
 
 pub async fn describe_state_machine_with_tags(
     client: &Sfn,
     state_arn: &str,
-) -> Option<StateMachine> {
+) -> Result<Option<StateMachine>> {
     let res = client.describe_state_machine(state_arn).await;
 
     match res {
         Ok(output) => {
-            let tags = list_tags_for_resource(client, state_arn).await;
+            let tags = list_tags_for_resource(client, state_arn).await?;
             let mut sfn = StateMachine::from(output);
             sfn.tags = tags;
 
-            Some(sfn)
+            Ok(Some(sfn))
         }
         Err(err) => {
             let service_error = err.into_service_error();
             if service_error.is_state_machine_does_not_exist() {
-                None
+                Ok(None)
             } else {
-                panic!("failed to describe state machine: {}", service_error);
+                bail!("failed to describe state machine: {}", service_error);
             }
         }
     }

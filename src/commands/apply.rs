@@ -50,27 +50,27 @@ Enter a value: "#
                 match diff_op {
                     DiffOp::CreateState => {
                         println!("Creating state machine: {}", state.name);
-                        sfn::create_state_machine(&context.sfn_client, state).await;
+                        sfn::create_state_machine(&context.sfn_client, state).await?;
                     }
                     DiffOp::UpdateState => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
                         println!("Updating state machine: {}", state.name);
-                        sfn::update_state_machine(&context.sfn_client, &state_arn, state).await;
+                        sfn::update_state_machine(&context.sfn_client, &state_arn, state).await?;
                     }
                     DiffOp::DeleteState => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
                         println!("Deleting state machine: {}", state.name);
-                        sfn::delete_state_machine(&context.sfn_client, &state_arn).await;
+                        sfn::delete_state_machine(&context.sfn_client, &state_arn).await?;
                     }
                     DiffOp::AddStateTag => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
                         println!("Adding tags to state machine: {}", state.name);
-                        sfn::tag_resource(&context.sfn_client, &state_arn, &state.tags).await;
+                        sfn::tag_resource(&context.sfn_client, &state_arn, &state.tags).await?;
                     }
                     DiffOp::RemoveStateTag(removed_keys) => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
                         println!("Removing tags from state machine: {}", state.name);
-                        sfn::untag_resource(&context.sfn_client, &state_arn, removed_keys).await;
+                        sfn::untag_resource(&context.sfn_client, &state_arn, removed_keys).await?;
                     }
                     DiffOp::CreateSchedule => {
                         let schedule = ss_config.schedule.as_ref().unwrap();
