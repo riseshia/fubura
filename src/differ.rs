@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use console::Style;
 use similar::{ChangeTag, TextDiff};
 
@@ -131,11 +131,11 @@ fn split_sfn_and_tags(sfn: Option<StateMachine>) -> (Option<StateMachine>, Vec<R
     (Some(sfn), tags)
 }
 
-pub fn build_diff_ops(
+fn build_diff_ops(
     local_config: &SsConfig,
     remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
-) -> Vec<DiffOp> {
+) -> Result<Vec<DiffOp>> {
     let mut expected_ops = vec![];
 
     let local_state = local_config.state.clone();
@@ -173,7 +173,7 @@ pub fn build_diff_ops(
 
     if local_config.delete_all || local_config.delete_schedule {
         if local_schedule.is_none() {
-            panic!("delete schedule flag(deleteAll or deleteSchedule) is on, but can't identify schedule since schedule config is not exist.");
+            bail!("delete schedule flag(deleteAll or deleteSchedule) is on, but can't identify schedule since schedule config is not exist.");
         }
 
         if remote_schedule.is_some() {
@@ -198,7 +198,7 @@ pub fn build_diff_ops(
     }
 
     expected_ops.sort();
-    expected_ops
+    Ok(expected_ops)
 }
 
 fn build_sfn_tags_diff_ops(
@@ -273,7 +273,7 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
             None
         };
 
-        let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
+        let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule)?;
         for diff_op in diff_ops.iter() {
             diff_result.append_diff_op(&ss_config.state.name, diff_op)
         }
@@ -479,7 +479,7 @@ mod test {
         let remote_state = Some(StateMachine::test_default());
         let remote_schedule = Some(Schedule::test_default());
 
-        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
 
         assert_eq!(actual_ops, vec![]);
     }
@@ -496,7 +496,7 @@ mod test {
         let remote_state = None;
         let remote_schedule = None;
 
-        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
 
         assert_eq!(
             actual_ops,
@@ -525,7 +525,7 @@ mod test {
 
         let remote_schedule = Some(Schedule::test_default());
 
-        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
 
         assert_eq!(actual_ops, vec![DiffOp::UpdateState]);
     }
@@ -546,7 +546,7 @@ mod test {
         let remote_state = Some(StateMachine::test_default());
         let remote_schedule = Some(Schedule::test_default());
 
-        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
 
         assert_eq!(actual_ops, vec![DiffOp::AddStateTag]);
     }
@@ -566,7 +566,7 @@ mod test {
         remote_schedule.schedule_expression = "rate(1 hour)".to_string();
         let remote_schedule = Some(remote_schedule);
 
-        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
 
         assert_eq!(actual_ops, vec![DiffOp::UpdateSchedule]);
     }
@@ -583,7 +583,7 @@ mod test {
         let remote_state = Some(StateMachine::test_default());
         let remote_schedule = Some(Schedule::test_default());
 
-        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
 
         assert_eq!(actual_ops, vec![DiffOp::DeleteSchedule]);
     }
@@ -600,7 +600,7 @@ mod test {
         let remote_state = Some(StateMachine::test_default());
         let remote_schedule = Some(Schedule::test_default());
 
-        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
 
         assert_eq!(
             actual_ops,
