@@ -19,6 +19,7 @@ impl From<aws_sdk_sfn::types::CloudWatchLogsLogGroup> for CloudWatchLogsLogGroup
 
 impl From<CloudWatchLogsLogGroup> for aws_sdk_sfn::types::CloudWatchLogsLogGroup {
     fn from(value: CloudWatchLogsLogGroup) -> Self {
+        // XXX: Don't panic here
         let log_group_arn = value
             .log_group_arn
             .unwrap_or_else(|| panic!("log_group_arn is required for CloudWatchLogsLogGroup"));
@@ -71,6 +72,7 @@ pub enum LogLevel {
 
 impl From<aws_sdk_sfn::types::LogLevel> for LogLevel {
     fn from(value: aws_sdk_sfn::types::LogLevel) -> Self {
+        // XXX: Don't panic here
         match value {
             aws_sdk_sfn::types::LogLevel::All => LogLevel::All,
             aws_sdk_sfn::types::LogLevel::Error => LogLevel::Error,
@@ -120,6 +122,7 @@ impl From<LoggingConfiguration> for aws_sdk_sfn::types::LoggingConfiguration {
         let mut builder = aws_sdk_sfn::types::builders::LoggingConfigurationBuilder::default();
 
         if value.destinations.len() > 1 {
+            // XXX: Don't panic here
             panic!("destinations size is limited to 1.");
         }
 
@@ -173,6 +176,7 @@ impl From<aws_sdk_sfn::types::StateMachineType> for StateMachineType {
         match value {
             aws_sdk_sfn::types::StateMachineType::Standard => StateMachineType::Standard,
             aws_sdk_sfn::types::StateMachineType::Express => StateMachineType::Express,
+            // XXX: Don't panic here
             _ => panic!("unknown state machine type: {:?}", value),
         }
     }

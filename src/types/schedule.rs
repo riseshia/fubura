@@ -18,6 +18,7 @@ impl From<aws_sdk_scheduler::types::FlexibleTimeWindowMode> for FlexibleTimeWind
             aws_sdk_scheduler::types::FlexibleTimeWindowMode::Flexible => {
                 FlexibleTimeWindowMode::Flexible
             }
+            // XXX: Don't panic here
             _ => panic!("Unexpected flexible time window mode"),
         }
     }
@@ -121,6 +122,7 @@ impl From<aws_sdk_scheduler::types::AssignPublicIp> for AssignPublicIp {
         match value {
             aws_sdk_scheduler::types::AssignPublicIp::Disabled => AssignPublicIp::Disabled,
             aws_sdk_scheduler::types::AssignPublicIp::Enabled => AssignPublicIp::Enabled,
+            // XXX: Don't panic here
             _ => panic!("Unexpected assign public ip"),
         }
     }
@@ -212,6 +214,7 @@ impl From<aws_sdk_scheduler::types::PlacementConstraintType> for PlacementConstr
             aws_sdk_scheduler::types::PlacementConstraintType::DistinctInstance => {
                 PlacementConstraintType::DistinctInstance
             }
+            // XXX: Don't panic here
             _ => panic!("Unexpected placement constraint type"),
         }
     }
@@ -278,6 +281,7 @@ impl From<aws_sdk_scheduler::types::PlacementStrategyType> for PlacementStrategy
             aws_sdk_scheduler::types::PlacementStrategyType::Binpack => {
                 PlacementStrategyType::Binpack
             }
+            // XXX: Don't panic here
             _ => panic!("Unexpected placement strategy type"),
         }
     }
@@ -344,6 +348,7 @@ impl From<aws_sdk_scheduler::types::LaunchType> for LaunchType {
             aws_sdk_scheduler::types::LaunchType::Ec2 => LaunchType::Ec2,
             aws_sdk_scheduler::types::LaunchType::Fargate => LaunchType::Fargate,
             aws_sdk_scheduler::types::LaunchType::External => LaunchType::External,
+            // XXX: Don't panic here
             _ => panic!("Unexpected launch type"),
         }
     }
@@ -371,6 +376,7 @@ impl From<aws_sdk_scheduler::types::PropagateTags> for PropagateTags {
             aws_sdk_scheduler::types::PropagateTags::TaskDefinition => {
                 PropagateTags::TaskDefinition
             }
+            // XXX: Don't panic here
             _ => panic!("Unexpected propagate tags"),
         }
     }
@@ -713,6 +719,7 @@ impl From<aws_sdk_scheduler::types::ScheduleState> for ScheduleState {
         match value {
             aws_sdk_scheduler::types::ScheduleState::Enabled => ScheduleState::Enabled,
             aws_sdk_scheduler::types::ScheduleState::Disabled => ScheduleState::Disabled,
+            // XXX: Don't panic here
             _ => panic!("Unexpected schedule state"),
         }
     }
@@ -802,6 +809,7 @@ mod datetime_format_as_aws_dt {
     {
         if let Some(date) = date {
             let date_str = date.fmt(DateTimeFormat::DateTime).unwrap_or_else(|e| {
+                // XXX: Don't panic here
                 panic!("Fail to parse datetime string {:?}", e);
             });
 
@@ -819,6 +827,7 @@ mod datetime_format_as_aws_dt {
 
         if let Some(s) = s {
             let s = DateTime::from_str(s.as_str(), DateTimeFormat::DateTime).unwrap_or_else(|e| {
+                // XXX: Don't panic here
                 panic!("Fail to parse datetime string {:?}", e);
             });
 
