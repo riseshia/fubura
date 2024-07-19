@@ -3,15 +3,14 @@ use std::collections::HashMap;
 use anyhow::Result;
 
 use crate::context::Context;
-use crate::differ::{build_diff_ops, format_config_diff};
-use crate::types::{Config, DiffOp, DiffResult, SsConfig};
+use crate::differ::diff;
+use crate::types::{Config, DiffOp, SsConfig};
 use crate::{scheduler, sfn, sts};
 
 pub struct ApplyCommand;
 
 impl ApplyCommand {
     pub async fn run(context: &Context, auto_approve: &bool, config: &Config) -> Result<()> {
-        let mut diff_result = DiffResult::default();
         let ss_config_by_name: HashMap<String, &SsConfig> = HashMap::from_iter(
             config
                 .ss_configs
@@ -19,36 +18,7 @@ impl ApplyCommand {
                 .map(|ss_config| (ss_config.state.name.clone(), ss_config)),
         );
 
-        let state_arn_prefix = sts::build_state_arn_prefix(context).await;
-
-        let target_ss_configs = config.target_ss_configs(&context.targets);
-
-        for ss_config in target_ss_configs {
-            let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
-
-            let remote_state =
-                sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await;
-
-            let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
-                scheduler::get_schedule(
-                    &context.scheduler_client,
-                    &schedule_config.schedule_name_with_group(),
-                )
-                .await
-            } else {
-                None
-            };
-
-            let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule);
-            for diff_op in diff_ops.iter() {
-                diff_result.append_diff_op(&ss_config.state.name, diff_op)
-            }
-
-            let text_diff =
-                format_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
-            println!("{}", &text_diff);
-            diff_result.append_text_diff(text_diff);
-        }
+        let diff_result = diff(context, config).await?;
 
         println!("\nFubura will:");
         for (op, count) in diff_result.summary.iter() {
@@ -71,6 +41,7 @@ Enter a value: "#
             }
         }
 
+        let state_arn_prefix = sts::build_state_arn_prefix(context).await;
         for diff_ops_for_ss in diff_result.detail_diff_ops.iter() {
             let ss_config = *ss_config_by_name.get(&diff_ops_for_ss.state_name).unwrap();
             let state = &ss_config.state;
