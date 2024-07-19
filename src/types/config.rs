@@ -17,7 +17,8 @@ impl Config {
         let config_value = jsonnet_evaluator::eval(config, ext_str).unwrap();
 
         serde_json::from_value(config_value).unwrap_or_else(|e| {
-            panic!("failed to parse config file with error: {}", e);
+            eprintln!("failed to parse config file with error: {}", e);
+            std::process::exit(1);
         })
     }
 

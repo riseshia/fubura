@@ -23,7 +23,10 @@ impl FuburaContext {
         let sts_client = Sts::new(aws_sdk_sts::Client::new(&aws_config));
         let aws_region = aws_config
             .region()
-            .unwrap_or_else(|| panic!("AWS region not set"))
+            .unwrap_or_else(|| {
+                eprintln!("AWS region not set");
+                std::process::exit(1);
+            })
             .to_string();
 
         Self {
