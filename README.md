@@ -24,8 +24,6 @@ Custom tap is available for Homebrew.
 
 ### Homebrew (macOS and Linux)
 
-XXX: to be supported
-
 ```sh
 brew install rieshia/x/fubura
 ```
