@@ -216,7 +216,6 @@ fn build_sfn_tags_diff_ops(
     // Check added
     let added_tag_keys: HashSet<_> = local_tag_keys.difference(&remote_tag_keys).collect();
     if !added_tag_keys.is_empty() {
-        println!("111added_tag_keys: {:?}", added_tag_keys);
         required_ops.insert(DiffOp::AddStateTag);
     }
 
@@ -231,7 +230,6 @@ fn build_sfn_tags_diff_ops(
         .filter(|tag| retained_tag_keys.contains(&&tag.key))
         .collect();
     if local_retained_tags != remote_retained_tags {
-        println!("222added_tag_keys: {:?}", added_tag_keys);
         required_ops.insert(DiffOp::AddStateTag);
     }
 
