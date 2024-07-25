@@ -13,6 +13,7 @@ pub enum DiffOp {
 }
 
 impl DiffOp {
+    // report for user should not show tag api, so, let them be merged into update_state
     pub fn op_for_report(op: &DiffOp) -> &DiffOp {
         match op {
             DiffOp::AddStateTag => &DiffOp::UpdateState,

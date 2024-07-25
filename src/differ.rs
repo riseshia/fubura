@@ -145,6 +145,8 @@ fn build_diff_ops(
     let local_state = local_state.unwrap();
     let (remote_state, remote_state_tags) = split_sfn_and_tags(remote_state);
 
+    let mut need_create_state = false;
+
     if local_config.delete_all {
         if remote_state.is_some() {
             expected_ops.push(DiffOp::DeleteState);
@@ -159,9 +161,11 @@ fn build_diff_ops(
         }
     } else {
         expected_ops.push(DiffOp::CreateState);
+        need_create_state = true;
     }
 
-    if !expected_ops.contains(&DiffOp::DeleteState) {
+    // Create ops will handle tags as it is, so dont need to push tags ops
+    if !expected_ops.contains(&DiffOp::DeleteState) && !need_create_state {
         let ops = build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags);
         for op in ops {
             expected_ops.push(op);
@@ -498,11 +502,7 @@ mod test {
 
         assert_eq!(
             actual_ops,
-            vec![
-                DiffOp::CreateState,
-                DiffOp::AddStateTag,
-                DiffOp::CreateSchedule
-            ]
+            vec![DiffOp::CreateState, DiffOp::CreateSchedule]
         );
     }
 
@@ -769,7 +769,6 @@ mod test {
         actual_diff_result.text_diff.clear(); // do not check text_diff
         let mut expected_diff_result = DiffResult::default();
         expected_diff_result.append_diff_op("HelloWorld", &DiffOp::CreateState);
-        expected_diff_result.append_diff_op("HelloWorld", &DiffOp::AddStateTag);
         expected_diff_result.append_diff_op("HelloWorld", &DiffOp::CreateSchedule);
 
         similar_asserts::assert_eq!(expected_diff_result, actual_diff_result);
