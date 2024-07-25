@@ -19,10 +19,12 @@ async fn main() {
             config_path,
             ext_str,
             target,
+            json_diff_path,
         } => {
             let config = Config::load_from_path(config_path, ext_str);
             let mut context = FuburaContext::async_default().await;
             context.targets.clone_from(target);
+            context.json_diff_path.clone_from(json_diff_path);
 
             ApplyCommand::run(&context, auto_approve, &config).await
         }

@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 
 use crate::context::FuburaContext;
 use crate::differ::diff;
-use crate::types::{Config, DiffOp, SsConfig};
+use crate::types::{Config, DiffOp, DiffResult, SsConfig};
 use crate::{scheduler, sfn, sts};
 
 pub struct ApplyCommand;
@@ -39,6 +39,10 @@ Enter a value: "#
             if response != "yes" {
                 bail!("apply cancelled!");
             }
+        }
+
+        if let Some(json_diff_path) = &context.json_diff_path {
+            write_result_to_path(json_diff_path, &diff_result)?;
         }
 
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
@@ -93,4 +97,10 @@ Enter a value: "#
 
         Ok(())
     }
+}
+
+fn write_result_to_path(output_path: &str, diff_result: &DiffResult) -> Result<()> {
+    let json_diff = serde_json::to_string_pretty(diff_result).unwrap();
+    std::fs::write(output_path, json_diff)?;
+    Ok(())
 }

@@ -24,6 +24,9 @@ pub enum Commands {
         /// filter with target state machine names
         #[clap(long = "target", short = 't', value_name = "key=[val]")]
         target: Option<Vec<String>>,
+        /// Specify path to diff result as json
+        #[clap(long = "diff-as-json", short = 'o', value_name = "output path")]
+        json_diff_path: Option<String>,
     },
     /// plan config
     Plan {
@@ -36,7 +39,7 @@ pub enum Commands {
         /// filter with target state machine names
         #[clap(long = "target", short = 't', value_name = "key=[val]")]
         target: Option<Vec<String>>,
-        /// Specify path to output diff as json
+        /// Specify path to diff result as json
         #[clap(long = "diff-as-json", short = 'o', value_name = "output path")]
         json_diff_path: Option<String>,
     },
