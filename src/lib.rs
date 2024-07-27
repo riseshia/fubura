@@ -3,6 +3,7 @@ pub mod commands;
 pub mod context;
 pub mod differ;
 pub mod jsonnet_evaluator;
+pub mod macros;
 pub mod scheduler;
 pub mod sfn;
 pub mod sts;

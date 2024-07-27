@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{cli::StrKeyVal, jsonnet_evaluator};
+use crate::{cli::StrKeyVal, fast_exit, jsonnet_evaluator};
 
 use super::SsConfig;
 
@@ -14,11 +14,12 @@ pub struct Config {
 
 impl Config {
     pub fn load_from_path(config: &str, ext_str: &[StrKeyVal]) -> Config {
-        let config_value = jsonnet_evaluator::eval(config, ext_str).unwrap();
+        let config_value = jsonnet_evaluator::eval(config, ext_str).unwrap_or_else(|e| {
+            fast_exit!("failed to evaluate jsonnet: {}", e);
+        });
 
         serde_json::from_value(config_value).unwrap_or_else(|e| {
-            eprintln!("failed to parse config file with error: {}", e);
-            std::process::exit(1);
+            fast_exit!("failed to parse config file: {}", e);
         })
     }
 

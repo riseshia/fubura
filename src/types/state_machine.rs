@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::fast_exit;
+
 use super::ResourceTag;
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
@@ -19,10 +21,10 @@ impl From<aws_sdk_sfn::types::CloudWatchLogsLogGroup> for CloudWatchLogsLogGroup
 
 impl From<CloudWatchLogsLogGroup> for aws_sdk_sfn::types::CloudWatchLogsLogGroup {
     fn from(value: CloudWatchLogsLogGroup) -> Self {
-        // XXX: Don't panic here
+        // XXX: Don't fast_exit here
         let log_group_arn = value
             .log_group_arn
-            .unwrap_or_else(|| panic!("log_group_arn is required for CloudWatchLogsLogGroup"));
+            .unwrap_or_else(|| fast_exit!("log_group_arn is required for CloudWatchLogsLogGroup"));
 
         aws_sdk_sfn::types::builders::CloudWatchLogsLogGroupBuilder::default()
             .log_group_arn(log_group_arn)
@@ -72,13 +74,13 @@ pub enum LogLevel {
 
 impl From<aws_sdk_sfn::types::LogLevel> for LogLevel {
     fn from(value: aws_sdk_sfn::types::LogLevel) -> Self {
-        // XXX: Don't panic here
+        // XXX: Don't fast_exit here
         match value {
             aws_sdk_sfn::types::LogLevel::All => LogLevel::All,
             aws_sdk_sfn::types::LogLevel::Error => LogLevel::Error,
             aws_sdk_sfn::types::LogLevel::Fatal => LogLevel::Fatal,
             aws_sdk_sfn::types::LogLevel::Off => LogLevel::Off,
-            _ => panic!("unknown log level: {:?}", value),
+            _ => fast_exit!("unknown log level: {:?}", value),
         }
     }
 }
@@ -122,8 +124,8 @@ impl From<LoggingConfiguration> for aws_sdk_sfn::types::LoggingConfiguration {
         let mut builder = aws_sdk_sfn::types::builders::LoggingConfigurationBuilder::default();
 
         if value.destinations.len() > 1 {
-            // XXX: Don't panic here
-            panic!("destinations size is limited to 1.");
+            // XXX: Don't fast_exit here
+            fast_exit!("destinations size is limited to 1.");
         }
 
         if let Some(destination) = value.destinations.first() {
@@ -176,8 +178,8 @@ impl From<aws_sdk_sfn::types::StateMachineType> for StateMachineType {
         match value {
             aws_sdk_sfn::types::StateMachineType::Standard => StateMachineType::Standard,
             aws_sdk_sfn::types::StateMachineType::Express => StateMachineType::Express,
-            // XXX: Don't panic here
-            _ => panic!("unknown state machine type: {:?}", value),
+            // XXX: Don't fast_exit here
+            _ => fast_exit!("unknown state machine type: {:?}", value),
         }
     }
 }

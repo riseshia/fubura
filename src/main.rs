@@ -7,6 +7,7 @@ use fubura::commands::apply::ApplyCommand;
 use fubura::commands::import::ImportCommand;
 use fubura::commands::plan::PlanCommand;
 use fubura::context::FuburaContext;
+use fubura::fast_exit;
 use fubura::types::Config;
 
 #[tokio::main]
@@ -68,7 +69,6 @@ async fn main() {
     };
 
     if let Err(e) = result {
-        eprintln!("{}", e);
-        std::process::exit(1);
+        fast_exit!("{}", e);
     }
 }
