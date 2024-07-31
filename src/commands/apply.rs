@@ -20,11 +20,6 @@ impl ApplyCommand {
 
         let diff_result = diff(context, config).await?;
 
-        println!("\nFubura will:");
-        for (op, count) in diff_result.summary.iter() {
-            println!("    {}: {}", op, count);
-        }
-
         if !auto_approve {
             print!(
                 r#"
