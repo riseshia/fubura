@@ -325,152 +325,7 @@ mod test {
     use mockall::predicate::eq;
 
     #[test]
-    fn test_build_tags_diff_ops_with_no_diff() {
-        let local_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "value1".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "value2".to_string(),
-            },
-        ];
-        let remote_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "value1".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "value2".to_string(),
-            },
-        ];
-
-        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
-
-        assert_eq!(actual_ops, vec![]);
-    }
-
-    #[test]
-    fn test_build_tags_diff_ops_with_add_tag() {
-        let local_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "value1".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "value2".to_string(),
-            },
-        ];
-        let remote_tags = vec![ResourceTag {
-            key: "key1".to_string(),
-            value: "value1".to_string(),
-        }];
-
-        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
-
-        assert_eq!(actual_ops, vec![DiffOp::AddStateTag]);
-    }
-
-    #[test]
-    fn test_build_tags_diff_ops_with_remove_tag() {
-        let local_tags = vec![ResourceTag {
-            key: "key1".to_string(),
-            value: "value1".to_string(),
-        }];
-        let remote_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "value1".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "value2".to_string(),
-            },
-        ];
-
-        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
-
-        assert_eq!(
-            actual_ops,
-            vec![DiffOp::RemoveStateTag(vec!["key2".to_string()])]
-        );
-    }
-
-    #[test]
-    fn test_build_tags_diff_ops_with_rewrite_tag() {
-        let local_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "new_value".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "value2".to_string(),
-            },
-        ];
-        let remote_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "value1".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "value2".to_string(),
-            },
-        ];
-
-        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
-
-        assert_eq!(actual_ops, vec![DiffOp::AddStateTag]);
-    }
-
-    #[test]
-    fn test_build_tags_diff_ops_with_composite_tag() {
-        let local_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "value1".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "new_value".to_string(),
-            },
-            ResourceTag {
-                key: "local_only_key".to_string(),
-                value: "local_only_value".to_string(),
-            },
-        ];
-        let remote_tags = vec![
-            ResourceTag {
-                key: "key1".to_string(),
-                value: "value1".to_string(),
-            },
-            ResourceTag {
-                key: "key2".to_string(),
-                value: "value2".to_string(),
-            },
-            ResourceTag {
-                key: "remote_only_key".to_string(),
-                value: "remote_only_value".to_string(),
-            },
-        ];
-
-        let actual_ops = build_sfn_tags_diff_ops(&local_tags, &remote_tags);
-
-        assert_eq!(
-            actual_ops,
-            vec![
-                DiffOp::AddStateTag,
-                DiffOp::RemoveStateTag(vec!["remote_only_key".to_string()])
-            ]
-        );
-    }
-
-    #[test]
-    fn test_build_diff_ops_no_diff() {
+    fn test_build_diff_ops_returns_no_diff() {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -487,7 +342,24 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_create_state_and_schedule() {
+    fn test_build_diff_ops_returns_create_state() {
+        let local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: None,
+            delete_all: false,
+            delete_schedule: false,
+        };
+
+        let remote_state = None;
+        let remote_schedule = None;
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(actual_ops, vec![DiffOp::CreateState]);
+    }
+
+    #[test]
+    fn test_build_diff_ops_returns_create_state_and_schedule() {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -507,7 +379,7 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_update_state() {
+    fn test_build_diff_ops_returns_update_state() {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -529,7 +401,7 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_update_state_tags() {
+    fn test_build_diff_ops_returns_update_state_and_add_tag() {
         let mut local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -541,7 +413,98 @@ mod test {
             value: "value".to_string(),
         });
 
-        let remote_state = Some(StateMachine::test_default());
+        let mut remote_state = StateMachine::test_default();
+        remote_state.definition = json!({
+            "StartAt": "Updated",
+        });
+        let remote_state = Some(remote_state);
+
+        let remote_schedule = Some(Schedule::test_default());
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(actual_ops, vec![DiffOp::UpdateState, DiffOp::AddStateTag]);
+    }
+
+    #[test]
+    fn test_build_diff_ops_returns_update_state_and_remove_tag() {
+        let mut local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: false,
+            delete_schedule: false,
+        };
+        local_config.state.tags.pop();
+
+        let mut remote_state = StateMachine::test_default();
+        remote_state.definition = json!({
+            "StartAt": "Updated",
+        });
+        let remote_state = Some(remote_state);
+
+        let remote_schedule = Some(Schedule::test_default());
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(
+            actual_ops,
+            vec![
+                DiffOp::UpdateState,
+                DiffOp::RemoveStateTag(vec!["Name".to_string()])
+            ]
+        );
+    }
+
+    #[test]
+    fn test_build_diff_ops_returns_update_state_and_add_remove_tag() {
+        let mut local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: false,
+            delete_schedule: false,
+        };
+        local_config.state.tags.pop();
+        local_config.state.tags.push(ResourceTag {
+            key: "new_key".to_string(),
+            value: "value".to_string(),
+        });
+
+        let mut remote_state = StateMachine::test_default();
+        remote_state.definition = json!({
+            "StartAt": "Updated",
+        });
+        let remote_state = Some(remote_state);
+
+        let remote_schedule = Some(Schedule::test_default());
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(
+            actual_ops,
+            vec![
+                DiffOp::UpdateState,
+                DiffOp::AddStateTag,
+                DiffOp::RemoveStateTag(vec!["Name".to_string()])
+            ]
+        );
+    }
+
+    #[test]
+    fn test_build_diff_ops_returns_add_tag() {
+        let mut local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: false,
+            delete_schedule: false,
+        };
+        local_config.state.tags.push(ResourceTag {
+            key: "new_key".to_string(),
+            value: "value".to_string(),
+        });
+
+        let remote_state = StateMachine::test_default();
+        let remote_state = Some(remote_state);
+
         let remote_schedule = Some(Schedule::test_default());
 
         let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
@@ -550,7 +513,60 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_update_schedule() {
+    fn test_build_diff_ops_returns_remove_tag() {
+        let mut local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: false,
+            delete_schedule: false,
+        };
+        local_config.state.tags.pop();
+
+        let remote_state = StateMachine::test_default();
+        let remote_state = Some(remote_state);
+
+        let remote_schedule = Some(Schedule::test_default());
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(
+            actual_ops,
+            vec![DiffOp::RemoveStateTag(vec!["Name".to_string()])]
+        );
+    }
+
+    #[test]
+    fn test_build_diff_ops_returns_add_remove_tag() {
+        let mut local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: false,
+            delete_schedule: false,
+        };
+        local_config.state.tags.pop();
+        local_config.state.tags.push(ResourceTag {
+            key: "new_key".to_string(),
+            value: "value".to_string(),
+        });
+
+        let remote_state = StateMachine::test_default();
+        let remote_state = Some(remote_state);
+
+        let remote_schedule = Some(Schedule::test_default());
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(
+            actual_ops,
+            vec![
+                DiffOp::AddStateTag,
+                DiffOp::RemoveStateTag(vec!["Name".to_string()])
+            ]
+        );
+    }
+
+    #[test]
+    fn test_build_diff_ops_returns_update_schedule() {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -570,7 +586,7 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_delete_schedule() {
+    fn test_build_diff_ops_with_delete_schedule_flag_returns_delete_schedule() {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -587,7 +603,45 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_delete_state_and_schedule() {
+    fn test_build_diff_ops_with_delete_schedule_flag_returns_no_diff() {
+        let local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: false,
+            delete_schedule: true,
+        };
+
+        let remote_state = Some(StateMachine::test_default());
+        let remote_schedule = None;
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(actual_ops, vec![]);
+    }
+
+    #[test]
+    fn test_build_diff_ops_with_delete_schedule_flag_returns_error() {
+        let local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: None,
+            delete_all: false,
+            delete_schedule: true,
+        };
+
+        let remote_state = Some(StateMachine::test_default());
+        let remote_schedule = None;
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule);
+        assert!(actual_ops.is_err());
+        let err = actual_ops.unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "delete schedule flag(deleteAll or deleteSchedule) is on, but can't identify schedule since schedule config is not exist."
+        );
+    }
+
+    #[test]
+    fn test_build_diff_ops_with_delete_all_flag_returns_delete_state_and_schedule() {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -606,8 +660,80 @@ mod test {
         );
     }
 
+    #[test]
+    fn test_build_diff_ops_with_delete_all_flag_returns_deletes_state_when_local_schedule_exist_but_remote_not(
+    ) {
+        let local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: true,
+            delete_schedule: false,
+        };
+
+        let remote_state = Some(StateMachine::test_default());
+        let remote_schedule = None;
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(actual_ops, vec![DiffOp::DeleteState]);
+    }
+
+    #[test]
+    fn test_build_diff_ops_with_delete_all_flag_returns_deletes_state_when_local_and_remote_schedule_not_exist(
+    ) {
+        let local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: None,
+            delete_all: true,
+            delete_schedule: false,
+        };
+
+        let remote_state = Some(StateMachine::test_default());
+        let remote_schedule = None;
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(actual_ops, vec![DiffOp::DeleteState]);
+    }
+
+    #[test]
+    fn test_build_diff_ops_with_delete_all_flag_returns_no_diff_when_local_resource_exist_but_remote_resources_not_exist(
+    ) {
+        let local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: true,
+            delete_schedule: false,
+        };
+
+        let remote_state = None;
+        let remote_schedule = None;
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(actual_ops, vec![]);
+    }
+
+    #[test]
+    fn test_build_diff_ops_with_delete_all_flag_returns_no_diff_when_local_state_exist_but_remote_state_not_exist(
+    ) {
+        let local_config = SsConfig {
+            state: StateMachine::test_default(),
+            schedule: None,
+            delete_all: true,
+            delete_schedule: false,
+        };
+
+        let remote_state = None;
+        let remote_schedule = None;
+
+        let actual_ops = build_diff_ops(&local_config, &remote_state, &remote_schedule).unwrap();
+
+        assert_eq!(actual_ops, vec![]);
+    }
+
     #[tokio::test]
-    async fn test_no_diff() {
+    async fn test_diff_no_diff() {
         let mut context = FuburaContext::async_default().await;
 
         context
