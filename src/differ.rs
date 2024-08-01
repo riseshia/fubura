@@ -145,39 +145,28 @@ fn build_diff_ops(
     let local_state = local_state.unwrap();
     let (remote_state, remote_state_tags) = split_sfn_and_tags(remote_state);
 
-    let mut need_create_state = false;
+    let local_schedule = local_config.schedule.clone();
+    let remote_schedule = remote_schedule.clone();
 
     if local_config.delete_all {
+        if local_schedule.is_some() && remote_schedule.is_some() {
+            expected_ops.push(DiffOp::DeleteSchedule);
+        } else {
+            // No change
+        }
+
         if remote_state.is_some() {
             expected_ops.push(DiffOp::DeleteState);
         } else {
             // No change
         }
-    } else if let Some(remote_state) = remote_state {
-        if local_state != remote_state {
-            expected_ops.push(DiffOp::UpdateState);
-        } else {
-            // No change
-        }
-    } else {
-        expected_ops.push(DiffOp::CreateState);
-        need_create_state = true;
+
+        return Ok(expected_ops);
     }
 
-    // Create ops will handle tags as it is, so dont need to push tags ops
-    if !expected_ops.contains(&DiffOp::DeleteState) && !need_create_state {
-        let ops = build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags);
-        for op in ops {
-            expected_ops.push(op);
-        }
-    }
-
-    let local_schedule = local_config.schedule.clone();
-    let remote_schedule = remote_schedule.clone();
-
-    if local_config.delete_all || local_config.delete_schedule {
+    if local_config.delete_schedule {
         if local_schedule.is_none() {
-            bail!("delete schedule flag(deleteAll or deleteSchedule) is on, but can't identify schedule since schedule config is not exist.");
+            bail!("delete schedule flag(deleteSchedule) is on, but can't identify schedule since schedule config is not exist.");
         }
 
         if remote_schedule.is_some() {
@@ -198,6 +187,28 @@ fn build_diff_ops(
             }
         } else {
             expected_ops.push(DiffOp::CreateSchedule);
+        }
+    }
+
+    if let Some(remote_state) = remote_state {
+        if local_state != remote_state {
+            expected_ops.push(DiffOp::UpdateState);
+        } else {
+            // No change
+        }
+    } else {
+        expected_ops.push(DiffOp::CreateState);
+        expected_ops.sort();
+
+        // Create ops will handle tags as it is, so dont need to push tags ops, so return here
+        return Ok(expected_ops);
+    }
+
+    // Create ops will handle tags as it is, so dont need to push tags ops
+    if !expected_ops.contains(&DiffOp::DeleteState) {
+        let ops = build_sfn_tags_diff_ops(&local_state_tags, &remote_state_tags);
+        for op in ops {
+            expected_ops.push(op);
         }
     }
 
@@ -636,7 +647,7 @@ mod test {
         let err = actual_ops.unwrap_err();
         assert_eq!(
             err.to_string(),
-            "delete schedule flag(deleteAll or deleteSchedule) is on, but can't identify schedule since schedule config is not exist."
+            "delete schedule flag(deleteSchedule) is on, but can't identify schedule since schedule config is not exist."
         );
     }
 
