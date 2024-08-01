@@ -39,7 +39,7 @@ fn format_resource_diff(target: &str, remote: &str, local: &str) -> String {
     buffer
 }
 
-pub fn format_config_diff(
+fn format_config_diff(
     local_config: &SsConfig,
     remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
