@@ -27,12 +27,15 @@ fn set_log_level(debug_mode: &bool) {
     };
 
     let format = tracing_subscriber::fmt::format()
-        .with_target(false)
+        .with_target(*debug_mode)
         .with_timer(tracing_subscriber::fmt::time::SystemTime)
         .compact();
 
     let filter = tracing_subscriber::filter::Targets::new()
         .with_target("fubura", fubura_level)
+        .with_target("hyper", tracing::Level::ERROR)
+        .with_target("h2", tracing::Level::ERROR)
+        .with_target("rustls", tracing::Level::ERROR)
         .with_default(dependency_level);
 
     tracing_subscriber::registry()
