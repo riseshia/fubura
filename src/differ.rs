@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use anyhow::{bail, Result};
 use console::Style;
 use similar::{ChangeTag, TextDiff};
-use tracing::info;
+use tracing::{debug, info};
 
 use crate::{
     context::FuburaContext,
@@ -290,6 +290,9 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
         };
 
         let diff_ops = build_diff_ops(ss_config, &remote_state, &remote_schedule)?;
+        debug!("state machine name: {}", &ss_config.state.name);
+        debug!("generated diff ops: {:?}", &diff_ops);
+
         for diff_op in diff_ops.iter() {
             diff_result.append_diff_op(&ss_config.state.name, diff_op)
         }
