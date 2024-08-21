@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use anyhow::{bail, Result};
 use console::Style;
 use similar::{ChangeTag, TextDiff};
+use tracing::info;
 
 use crate::{
     context::FuburaContext,
@@ -273,9 +274,11 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
     for ss_config in target_ss_configs {
         let state_arn = format!("{}{}", state_arn_prefix, ss_config.state.name);
 
+        info!("Describing state machine: {}", &state_arn);
         let remote_state =
             sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await?;
 
+        info!("Describing schedule: {}", &state_arn);
         let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
             scheduler::get_schedule(
                 &context.scheduler_client,

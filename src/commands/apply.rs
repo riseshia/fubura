@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, Result};
+use tracing::info;
 
 use crate::context::FuburaContext;
 use crate::differ::diff;
@@ -48,42 +49,42 @@ Enter a value: "#
             for diff_op in diff_ops_for_ss.diff_ops.iter() {
                 match diff_op {
                     DiffOp::CreateState => {
-                        println!("Creating state machine: {}", state.name);
+                        info!("Creating state machine: {}", state.name);
                         sfn::create_state_machine(&context.sfn_client, state).await?;
                     }
                     DiffOp::UpdateState => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                        println!("Updating state machine: {}", state.name);
+                        info!("Updating state machine: {}", state.name);
                         sfn::update_state_machine(&context.sfn_client, &state_arn, state).await?;
                     }
                     DiffOp::DeleteState => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                        println!("Deleting state machine: {}", state.name);
+                        info!("Deleting state machine: {}", state.name);
                         sfn::delete_state_machine(&context.sfn_client, &state_arn).await?;
                     }
                     DiffOp::AddStateTag => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                        println!("Adding tags to state machine: {}", state.name);
+                        info!("Adding tags to state machine: {}", state.name);
                         sfn::tag_resource(&context.sfn_client, &state_arn, &state.tags).await?;
                     }
                     DiffOp::RemoveStateTag(removed_keys) => {
                         let state_arn = format!("{}{}", state_arn_prefix, state.name);
-                        println!("Removing tags from state machine: {}", state.name);
+                        info!("Removing tags from state machine: {}", state.name);
                         sfn::untag_resource(&context.sfn_client, &state_arn, removed_keys).await?;
                     }
                     DiffOp::CreateSchedule => {
                         let schedule = ss_config.schedule.as_ref().unwrap();
-                        println!("Creating schedule: {}", schedule.name);
+                        info!("Creating schedule: {}", schedule.name);
                         scheduler::create_schedule(&context.scheduler_client, schedule).await?;
                     }
                     DiffOp::UpdateSchedule => {
                         let schedule = ss_config.schedule.as_ref().unwrap();
-                        println!("Updating schedule: {}", schedule.name);
+                        info!("Updating schedule: {}", schedule.name);
                         scheduler::update_schedule(&context.scheduler_client, schedule).await?;
                     }
                     DiffOp::DeleteSchedule => {
                         let schedule = ss_config.schedule.as_ref().unwrap();
-                        println!("Deleting schedule: {}", schedule.name);
+                        info!("Deleting schedule: {}", schedule.name);
                         scheduler::delete_schedule(&context.scheduler_client, schedule).await?;
                     }
                 }

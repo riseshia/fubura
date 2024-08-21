@@ -40,7 +40,7 @@ fn set_log_level(debug_mode: &bool) {
         .with(filter)
         .init();
 
-    info!("Set log level to {:?}", fubura_level);
+    info!("Set log level: {:?}", fubura_level);
 }
 
 #[tokio::main]
