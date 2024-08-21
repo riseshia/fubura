@@ -27,6 +27,9 @@ pub enum Commands {
         /// Specify path to diff result as json
         #[clap(long = "diff-as-json", short = 'o', value_name = "output path")]
         json_diff_path: Option<String>,
+        /// Emit logs for debugging
+        #[clap(long = "debug")]
+        debug_mode: bool,
     },
     /// plan config
     Plan {
@@ -42,6 +45,9 @@ pub enum Commands {
         /// Specify path to diff result as json
         #[clap(long = "diff-as-json", short = 'o', value_name = "output path")]
         json_diff_path: Option<String>,
+        /// Emit logs for debugging
+        #[clap(long = "debug")]
+        debug_mode: bool,
     },
     /// import state machine to specified config file
     Import {
@@ -60,6 +66,9 @@ pub enum Commands {
             value_name = "group-name/schedule-name"
         )]
         schedule_name_with_group: Option<String>,
+        /// Emit logs for debugging
+        #[clap(long = "debug")]
+        debug_mode: bool,
     },
 }
 
