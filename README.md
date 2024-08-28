@@ -64,20 +64,18 @@ Options:
 
 ```jsonnet
 // `fubura.jsonnet`
-{
-  ssConfigs: [{
-    state: {
-      // CreateStateMachine API Request Params except "versionDescription"
-      // https://docs.aws.amazon.com/step-functions/latest/apireference/API_CreateStateMachine.html
-    }, // should not be null
-    schedule: {
-      // CreateSchedule API Request Body except "ActionAfterCompletion", "ClientToken"
-      // https://docs.aws.amazon.com/scheduler/latest/APIReference/API_CreateSchedule.html
-    }, // could be null
-    deleteAll: true // Optional, default is false. If true, delete the state machine and schedule
-    deleteSchedule: true // Optional, default is false. If true, delete the schedule
-  }]
-}
+[{
+  state: {
+    // CreateStateMachine API Request Params except "versionDescription"
+    // https://docs.aws.amazon.com/step-functions/latest/apireference/API_CreateStateMachine.html
+  }, // should not be null
+  schedule: {
+    // CreateSchedule API Request Body except "ActionAfterCompletion", "ClientToken"
+    // https://docs.aws.amazon.com/scheduler/latest/APIReference/API_CreateSchedule.html
+  }, // could be null
+  deleteAll: true // Optional, default is false. If true, delete the state machine and schedule
+  deleteSchedule: true // Optional, default is false. If true, delete the schedule
+}]
 ```
 
 Full example configuration is available in [example](./example) directory.

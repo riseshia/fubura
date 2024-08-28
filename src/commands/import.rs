@@ -53,7 +53,10 @@ impl ImportCommand {
 
         config.ss_configs.push(ss_config);
 
-        std::fs::write(config_path, serde_json::to_string_pretty(&config).unwrap())?;
+        std::fs::write(
+            config_path,
+            serde_json::to_string_pretty(&config.ss_configs).unwrap(),
+        )?;
 
         Ok(())
     }
@@ -191,17 +194,15 @@ mod test {
 
         let config_str =
             std::fs::read_to_string(imported_config_path).expect("imported config not found");
-        let actual_config: Config =
+        let actual_config: Vec<SsConfig> =
             serde_json::from_str(&config_str).expect("imported config is not valid json");
 
-        let expected_config = Config {
-            ss_configs: vec![SsConfig {
-                state: StateMachine::test_default(),
-                schedule: Some(Schedule::test_default()),
-                delete_all: false,
-                delete_schedule: false,
-            }],
-        };
+        let expected_config = vec![SsConfig {
+            state: StateMachine::test_default(),
+            schedule: Some(Schedule::test_default()),
+            delete_all: false,
+            delete_schedule: false,
+        }];
 
         similar_asserts::assert_eq!(actual_config, expected_config);
     }
@@ -291,16 +292,14 @@ mod test {
 
         let config_str =
             std::fs::read_to_string(imported_config_path).expect("imported config not found");
-        let actual_config: Config =
+        let actual_config: Vec<SsConfig> =
             serde_json::from_str(&config_str).expect("imported config is not valid");
-        let expected_config = Config {
-            ss_configs: vec![SsConfig {
-                state: StateMachine::test_default(),
-                schedule: None,
-                delete_all: false,
-                delete_schedule: false,
-            }],
-        };
+        let expected_config = vec![SsConfig {
+            state: StateMachine::test_default(),
+            schedule: None,
+            delete_all: false,
+            delete_schedule: false,
+        }];
 
         similar_asserts::assert_eq!(actual_config, expected_config);
     }

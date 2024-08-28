@@ -18,9 +18,11 @@ impl Config {
             fast_exit!("failed to evaluate jsonnet: {}", e);
         });
 
-        serde_json::from_value(config_value).unwrap_or_else(|e| {
+        let ss_configs: Vec<SsConfig> = serde_json::from_value(config_value).unwrap_or_else(|e| {
             fast_exit!("failed to parse config file: {}", e);
-        })
+        });
+
+        Config { ss_configs }
     }
 
     pub fn target_ss_configs(&self, targets: &Option<Vec<String>>) -> Vec<&SsConfig> {

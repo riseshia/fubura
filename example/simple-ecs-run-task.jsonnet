@@ -103,10 +103,8 @@ local batch(name, definition, schedule, scheduleEnabled=true) = {
   schedule: buildSchedule(name, schedule, scheduleEnabled),
 };
 
-{
-  ssConfigs: [
-    batch('some-task', buildDefinition(
-      command=['bundle', 'exec', 'rails', 'routes']
-    ), 'rate(1 hours)'),
-  ],
-}
+[
+  batch('some-task', buildDefinition(
+    command=['bundle', 'exec', 'rails', 'routes']
+  ), 'rate(1 hours)'),
+]
