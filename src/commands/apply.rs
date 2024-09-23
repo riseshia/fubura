@@ -21,6 +21,10 @@ impl ApplyCommand {
 
         let diff_result = diff(context, config).await?;
 
+        if diff_result.no_change {
+            return Ok(());
+        }
+
         if !auto_approve {
             print!(
                 r#"

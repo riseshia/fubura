@@ -302,9 +302,13 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
         diff_result.append_text_diff(text_diff);
     }
 
-    println!("\nFubura will:");
-    for (op, count) in diff_result.summary.iter() {
-        println!("    {}: {}", op, count);
+    if diff_result.no_change {
+        println!("\nNo diff found. Fubura will do nothing.");
+    } else {
+        println!("\nFubura will:");
+        for (op, count) in diff_result.summary.iter() {
+            println!("    {}: {}", op, count);
+        }
     }
 
     Ok(diff_result)

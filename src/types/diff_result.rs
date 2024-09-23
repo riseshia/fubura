@@ -134,4 +134,14 @@ mod test {
 
         similar_asserts::assert_eq!(expected, actual.summary);
     }
+
+    #[tokio::test]
+    async fn test_no_change_flag() {
+        let mut actual = DiffResult::default();
+
+        similar_asserts::assert_eq!(true, actual.no_change);
+
+        actual.append_diff_op("NewBatch", &DiffOp::CreateState);
+        similar_asserts::assert_eq!(false, actual.no_change);
+    }
 }
