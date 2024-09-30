@@ -151,7 +151,7 @@ pub async fn create_state_machine(client: &Sfn, state: &StateMachine) -> Result<
         bail!(
             "failed to create state machine({}) with error: {}",
             state.name,
-            e
+            e.into_service_error()
         );
     }
 
@@ -169,7 +169,7 @@ pub async fn update_state_machine(
         bail!(
             "failed to update state machine({}) with error: {}",
             state.name,
-            e
+            e.into_service_error()
         );
     }
 
@@ -183,7 +183,7 @@ pub async fn delete_state_machine(client: &Sfn, state_arn: &str) -> Result<()> {
         bail!(
             "failed to delete state machine({}) with error: {}",
             state_arn,
-            e
+            e.into_service_error()
         );
     }
 
@@ -206,7 +206,7 @@ async fn list_tags_for_resource(client: &Sfn, state_arn: &str) -> Result<Vec<Res
             bail!(
                 "failed to list tags for resource({}) with error: {}",
                 state_arn,
-                err
+                err.into_service_error()
             );
         }
     }
@@ -216,7 +216,10 @@ pub async fn tag_resource(client: &Sfn, state_arn: &str, tags: &[ResourceTag]) -
     let res = client.tag_resource(state_arn, tags).await;
 
     if let Err(e) = res {
-        bail!("failed to tag resource with error: {}", e);
+        bail!(
+            "failed to tag resource with error: {}",
+            e.into_service_error()
+        );
     }
 
     Ok(())
@@ -226,7 +229,10 @@ pub async fn untag_resource(client: &Sfn, state_arn: &str, tags: &[String]) -> R
     let res = client.untag_resource(state_arn, tags).await;
 
     if let Err(e) = res {
-        bail!("failed to untag resource with error: {}", e);
+        bail!(
+            "failed to untag resource with error: {}",
+            e.into_service_error()
+        );
     }
 
     Ok(())

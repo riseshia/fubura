@@ -101,7 +101,7 @@ pub async fn create_schedule(client: &Scheduler, schedule: &Schedule) -> Result<
         bail!(
             "failed to create schedule({}) with error: {}",
             schedule.name,
-            e
+            e.into_service_error()
         );
     }
 
@@ -112,7 +112,10 @@ pub async fn update_schedule(client: &Scheduler, schedule: &Schedule) -> Result<
     let res = client.update_schedule(schedule).await;
 
     if let Err(e) = res {
-        bail!("failed to update schedule with error: {}", e);
+        bail!(
+            "failed to update schedule with error: {}",
+            e.into_service_error()
+        );
     }
 
     Ok(())
@@ -122,7 +125,10 @@ pub async fn delete_schedule(client: &Scheduler, schedule: &Schedule) -> Result<
     let res = client.delete_schedule(schedule).await;
 
     if let Err(e) = res {
-        bail!("failed to delete schedule with error: {}", e);
+        bail!(
+            "failed to delete schedule with error: {}",
+            e.into_service_error()
+        );
     }
 
     Ok(())
