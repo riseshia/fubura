@@ -14,9 +14,20 @@ pub struct FuburaContext {
 impl FuburaContext {
     #[cfg(not(test))]
     pub async fn async_default() -> Self {
-        use aws_config::BehaviorVersion;
+        use std::time::Duration;
 
-        let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+        use aws_config::{retry::RetryConfig, BehaviorVersion};
+
+        let max_attempts = 100;
+        let max_backoff = 3;
+
+        let retry_config = RetryConfig::standard()
+            .with_max_attempts(max_attempts)
+            .with_max_backoff(Duration::from_secs(max_backoff));
+        let aws_config = aws_config::defaults(BehaviorVersion::latest())
+            .retry_config(retry_config)
+            .load()
+            .await;
 
         let scheduler_client = Scheduler::new(aws_sdk_scheduler::Client::new(&aws_config));
         let sfn_client = Sfn::new(aws_sdk_sfn::Client::new(&aws_config));
