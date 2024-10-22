@@ -21,6 +21,10 @@ impl ApplyCommand {
 
         let diff_result = diff(context, config).await?;
 
+        if let Some(json_diff_path) = &context.json_diff_path {
+            write_result_to_path(json_diff_path, &diff_result)?;
+        }
+
         if diff_result.no_change {
             return Ok(());
         }
@@ -39,10 +43,6 @@ Enter a value: "#
             if response != "yes" {
                 bail!("apply cancelled!");
             }
-        }
-
-        if let Some(json_diff_path) = &context.json_diff_path {
-            write_result_to_path(json_diff_path, &diff_result)?;
         }
 
         let state_arn_prefix = sts::build_state_arn_prefix(context).await;
