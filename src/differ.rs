@@ -74,7 +74,7 @@ fn format_config_diff(
     }
 
     if !change_state && !change_schedule && !delete_state && !delete_schedule {
-        return "no difference".to_string();
+        return "no difference\n".to_string();
     }
 
     let target_state_id = local_config.state.name.as_str();
