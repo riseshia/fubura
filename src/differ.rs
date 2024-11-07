@@ -45,7 +45,7 @@ fn format_config_diff(
     remote_state: &Option<StateMachine>,
     remote_schedule: &Option<Schedule>,
     diff_ops: &[DiffOp],
-) -> String {
+) -> Option<String> {
     let mut change_state = false;
     let mut delete_state = false;
     let mut change_schedule = false;
@@ -74,7 +74,7 @@ fn format_config_diff(
     }
 
     if !change_state && !change_schedule && !delete_state && !delete_schedule {
-        return "no difference\n".to_string();
+        return None;
     }
 
     let target_state_id = local_config.state.name.as_str();
@@ -117,7 +117,7 @@ fn format_config_diff(
         buffer.push_str(str.as_str());
     }
 
-    buffer
+    Some(buffer)
 }
 
 fn split_sfn_and_tags(sfn: Option<StateMachine>) -> (Option<StateMachine>, Vec<ResourceTag>) {
@@ -298,8 +298,11 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
         }
 
         let text_diff = format_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
-        println!("{}", &text_diff);
-        diff_result.append_text_diff(text_diff);
+        if let Some(text_diff) = text_diff {
+            diff_result.append_text_diff(text_diff);
+        } else {
+            println!("no difference");
+        }
     }
 
     if diff_result.no_change {
