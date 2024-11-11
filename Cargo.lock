@@ -724,7 +724,7 @@ dependencies = [
  "console",
  "mockall",
  "rsjsonnet-front",
- "rsjsonnet-lang 0.3.0",
+ "rsjsonnet-lang",
  "serde",
  "serde_json",
  "similar",
@@ -1030,12 +1030,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 
 [[package]]
-name = "libyaml-safer"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cff24caa08828851c9b7ed1bce365b1d2496b9323dd0d4b241c1d10135f5bd6"
-
-[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1310,23 +1304,12 @@ dependencies = [
 
 [[package]]
 name = "rsjsonnet-front"
-version = "0.1.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b532a8af07b6781c59a68b7e55745720e26a043ae780c67f5789bf90eaad1c5c"
+checksum = "4c49c7a2d195ba780dd95738ea920ad413636b68572b33167357b608a64da317"
 dependencies = [
- "rsjsonnet-lang 0.1.2",
+ "rsjsonnet-lang",
  "sourceannot",
-]
-
-[[package]]
-name = "rsjsonnet-lang"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "238bb792a65f3a027191b986e4596bc23f78aea112c386e1684098855a1ccad7"
-dependencies = [
- "hashbrown 0.14.5",
- "libyaml-safer",
- "md-5",
 ]
 
 [[package]]
@@ -1578,9 +1561,9 @@ dependencies = [
 
 [[package]]
 name = "sourceannot"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "806ab42b7a19d82b5f611462f3de3234a1032e16f1837209fc874d7041401d91"
+checksum = "d1266b6cd460a74a33feaca00abc1c85617b20e9790f0effff696deeee75578d"
 dependencies = [
  "unicode-width",
 ]
