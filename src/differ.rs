@@ -299,9 +299,11 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
 
         let text_diff = format_config_diff(ss_config, &remote_state, &remote_schedule, &diff_ops);
         if let Some(text_diff) = text_diff {
+            println!("{}", text_diff);
             diff_result.append_text_diff(text_diff);
         } else {
             println!("no difference");
+            // do not append empty diff which is too verbose
         }
     }
 
