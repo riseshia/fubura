@@ -819,6 +819,7 @@ mod test {
             ))
             .return_once(|_| {
                 Ok(ListTagsForResourceOutputBuilder::default()
+                    .tags(TagBuilder::default().key("Env").value("Test").build())
                     .tags(
                         TagBuilder::default()
                             .key("Name")

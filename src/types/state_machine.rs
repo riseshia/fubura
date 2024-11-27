@@ -228,10 +228,16 @@ impl StateMachine {
                 }],
             }),
             tracing_configuration: None,
-            tags: vec![ResourceTag {
-                key: "Name".to_string(),
-                value: "HelloWorld".to_string(),
-            }],
+            tags: vec![
+                ResourceTag {
+                    key: "Env".to_string(),
+                    value: "Test".to_string(),
+                },
+                ResourceTag {
+                    key: "Name".to_string(),
+                    value: "HelloWorld".to_string(),
+                },
+            ],
         }
     }
 }
