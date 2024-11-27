@@ -264,6 +264,40 @@ fn build_sfn_tags_diff_ops(
     diff_ops
 }
 
+// Sort remote tags by local tags order
+// to make sure the diff result is consistent
+pub fn sort_tags_by_local_tags_order(
+    remote_state: Option<StateMachine>,
+    local_tags: &[ResourceTag],
+) -> Option<StateMachine> {
+    if remote_state.is_none() {
+        return remote_state;
+    }
+    let mut remote_state = remote_state.unwrap();
+    let remote_tags = remote_state.tags;
+
+    let local_tag_keys: HashSet<&String> = local_tags.iter().map(|tag| &tag.key).collect();
+    let remote_tag_keys: HashSet<&String> = remote_tags.iter().map(|tag| &tag.key).collect();
+    let remote_only_tag_keys = remote_tag_keys.difference(&local_tag_keys);
+    let mut sorted_remote_tags = vec![];
+
+    for local_tag in local_tags {
+        if let Some(remote_tag) = remote_tags.iter().find(|tag| tag.key == local_tag.key) {
+            sorted_remote_tags.push(remote_tag.clone());
+        }
+    }
+
+    for tag_key in remote_only_tag_keys {
+        if let Some(tag) = remote_tags.iter().find(|tag| tag.key == **tag_key) {
+            sorted_remote_tags.push(tag.clone());
+        }
+    }
+
+    remote_state.tags = sorted_remote_tags;
+
+    Some(remote_state)
+}
+
 pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult> {
     let mut diff_result = DiffResult::default();
 
@@ -277,6 +311,7 @@ pub async fn diff(context: &FuburaContext, config: &Config) -> Result<DiffResult
         info!("Describing state machine: {}", &state_arn);
         let remote_state =
             sfn::describe_state_machine_with_tags(&context.sfn_client, &state_arn).await?;
+        let remote_state = sort_tags_by_local_tags_order(remote_state, &ss_config.state.tags);
 
         info!("Describing schedule: {}", &state_arn);
         let remote_schedule = if let Some(schedule_config) = &ss_config.schedule {
@@ -826,6 +861,113 @@ mod test {
                             .value("HelloWorld")
                             .build(),
                     )
+                    .build())
+            });
+
+        context
+            .scheduler_client
+            .expect_get_schedule()
+            .with(eq("default"), eq("HelloWorld"))
+            .return_once(|_, _| {
+                Ok(GetScheduleOutputBuilder::default()
+                    .arn("arn:aws:scheduler:us-west-2:123456789012:schedule:default/HelloWorld")
+                    .group_name("default")
+                    .name("HelloWorld")
+                    .description("HellowWorld schedule")
+                    .schedule_expression("rate(1 minute)")
+                    .schedule_expression_timezone("UTC")
+                    .state(aws_sdk_scheduler::types::ScheduleState::Enabled)
+                    .target(
+                        TargetBuilder::default()
+                            .arn("arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld")
+                            .role_arn("arn:aws:iam::123456789012:role/service-role/HelloWorldRole")
+                            .build()
+                            .unwrap(),
+                    )
+                    .build())
+            });
+
+        let config = Config {
+            ss_configs: vec![SsConfig {
+                state: StateMachine::test_default(),
+                schedule: Some(Schedule::test_default()),
+                delete_all: false,
+                delete_schedule: false,
+            }],
+        };
+
+        let diff_result = diff(&context, &config).await.unwrap();
+        assert!(diff_result.no_change);
+    }
+
+    #[tokio::test]
+    async fn test_diff_no_diff_with_different_tag_order() {
+        let mut context = FuburaContext::async_default().await;
+
+        context
+            .sts_client
+            .expect_get_caller_identity()
+            .return_once(|| {
+                Ok(GetCallerIdentityOutputBuilder::default()
+                    .account("123456789012".to_string())
+                    .build())
+            });
+
+        context
+            .sfn_client
+            .expect_describe_state_machine()
+            .with(eq(
+                "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            ))
+            .return_once(|_| {
+                Ok(DescribeStateMachineOutputBuilder::default()
+                    .state_machine_arn(
+                        "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+                    )
+                    .name("HelloWorld".to_string())
+                    .r#type(StateMachineType::Standard)
+                    .definition("{ \"StartAt\": \"FirstState\" }".to_string())
+                    .role_arn(
+                        "arn:aws:iam::123456789012:role/service-role/HelloWorldRole".to_string(),
+                    )
+                    .logging_configuration(
+                        LoggingConfigurationBuilder::default()
+                            .level(LogLevel::All)
+                            .include_execution_data(true)
+                            .destinations(
+                                LogDestinationBuilder::default()
+                                    .cloud_watch_logs_log_group(
+                                        CloudWatchLogsLogGroupBuilder::default()
+                                            .log_group_arn("arn:aws:logs:us-west-2:123456789012:log-group:HelloWorldLogGroup")
+                                            .build(),
+                                    )
+                                    .build(),
+                            )
+                            .build(),
+                    )
+                    .creation_date(
+                        DateTime::from_str("2021-01-01T00:00:00Z", DateTimeFormat::DateTime)
+                            .unwrap(),
+                    )
+                    .build()
+                    .unwrap())
+            });
+
+        context
+            .sfn_client
+            .expect_list_tags_for_resource()
+            .with(eq(
+                "arn:aws:states:us-west-2:123456789012:stateMachine:HelloWorld",
+            ))
+            .return_once(|_| {
+                Ok(ListTagsForResourceOutputBuilder::default()
+                    .tags(
+                        TagBuilder::default()
+                            .key("Name")
+                            .value("HelloWorld")
+                            .build(),
+                    )
+                    .tags(TagBuilder::default().key("Env").value("Test").build())
                     .build())
             });
 
