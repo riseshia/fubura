@@ -209,9 +209,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-scheduler"
-version = "1.71.0"
+version = "1.72.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b64d2db8217efe7c6f8c51f142260cd91534b782607a5e3f8e6af5a4b454a1b7"
+checksum = "3e82282bceca0165996e62319d174f7d5734648b14944986967f2faf1a57b7bb"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -231,9 +231,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sfn"
-version = "1.75.0"
+version = "1.76.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93b970f4d6db41134290c3a121f5876073967d5d9492a1bba073a8bd069a6934"
+checksum = "6c2e9c25540d84ec9869db72d4218599a2df6a5f942a42607d504c68af669a7d"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -297,9 +297,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sts"
-version = "1.72.0"
+version = "1.73.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6933f189ed1255e78175fbd73fb200c0aae7240d220ed3346f567b0ddca3083"
+checksum = "f1e9c3c24e36183e2f698235ed38dcfbbdff1d09b9232dc866c4be3011e0b47e"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
