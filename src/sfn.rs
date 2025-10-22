@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use aws_sdk_sfn as sfn;
 use aws_sdk_sfn::operation::create_state_machine::{
     CreateStateMachineError, CreateStateMachineOutput,

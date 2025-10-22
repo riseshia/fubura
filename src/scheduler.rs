@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use aws_sdk_scheduler as scheduler;
 use aws_sdk_scheduler::operation::create_schedule::{CreateScheduleError, CreateScheduleOutput};
 use aws_sdk_scheduler::operation::delete_schedule::{DeleteScheduleError, DeleteScheduleOutput};

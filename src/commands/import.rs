@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 use crate::context::FuburaContext;
 use crate::types::{Config, SsConfig};
@@ -72,11 +72,11 @@ mod test {
         operation::get_schedule::builders::GetScheduleOutputBuilder, types::builders::TargetBuilder,
     };
     use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder;
+    use aws_sdk_sfn::types::LogLevel;
     use aws_sdk_sfn::types::builders::{
         CloudWatchLogsLogGroupBuilder, LogDestinationBuilder, LoggingConfigurationBuilder,
         TagBuilder,
     };
-    use aws_sdk_sfn::types::LogLevel;
     use aws_sdk_sfn::{
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
         primitives::{DateTime, DateTimeFormat},
