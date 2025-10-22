@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use console::Style;
 use similar::{ChangeTag, TextDiff};
 use tracing::{debug, info};
@@ -167,7 +167,9 @@ fn build_diff_ops(
 
     if local_config.delete_schedule {
         if local_schedule.is_none() {
-            bail!("delete schedule flag(deleteSchedule) is on, but can't identify schedule since schedule config is not exist.");
+            bail!(
+                "delete schedule flag(deleteSchedule) is on, but can't identify schedule since schedule config is not exist."
+            );
         }
 
         if remote_schedule.is_some() {
@@ -369,11 +371,11 @@ mod test {
     use aws_sdk_sfn::error::SdkError;
     use aws_sdk_sfn::operation::describe_state_machine::DescribeStateMachineError;
     use aws_sdk_sfn::operation::list_tags_for_resource::builders::ListTagsForResourceOutputBuilder;
+    use aws_sdk_sfn::types::LogLevel;
     use aws_sdk_sfn::types::builders::{
         CloudWatchLogsLogGroupBuilder, LogDestinationBuilder, LoggingConfigurationBuilder,
         TagBuilder,
     };
-    use aws_sdk_sfn::types::LogLevel;
     use aws_sdk_sfn::{
         operation::describe_state_machine::builders::DescribeStateMachineOutputBuilder,
         primitives::{DateTime, DateTimeFormat},
@@ -722,8 +724,8 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_with_delete_all_flag_returns_deletes_state_when_local_schedule_exist_but_remote_not(
-    ) {
+    fn test_build_diff_ops_with_delete_all_flag_returns_deletes_state_when_local_schedule_exist_but_remote_not()
+     {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -740,8 +742,8 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_with_delete_all_flag_returns_deletes_state_when_local_and_remote_schedule_not_exist(
-    ) {
+    fn test_build_diff_ops_with_delete_all_flag_returns_deletes_state_when_local_and_remote_schedule_not_exist()
+     {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: None,
@@ -758,8 +760,8 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_with_delete_all_flag_returns_no_diff_when_local_resource_exist_but_remote_resources_not_exist(
-    ) {
+    fn test_build_diff_ops_with_delete_all_flag_returns_no_diff_when_local_resource_exist_but_remote_resources_not_exist()
+     {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: Some(Schedule::test_default()),
@@ -776,8 +778,8 @@ mod test {
     }
 
     #[test]
-    fn test_build_diff_ops_with_delete_all_flag_returns_no_diff_when_local_state_exist_but_remote_state_not_exist(
-    ) {
+    fn test_build_diff_ops_with_delete_all_flag_returns_no_diff_when_local_state_exist_but_remote_state_not_exist()
+     {
         let local_config = SsConfig {
             state: StateMachine::test_default(),
             schedule: None,

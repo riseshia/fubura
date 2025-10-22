@@ -16,7 +16,7 @@ impl FuburaContext {
     pub async fn async_default() -> Self {
         use std::time::Duration;
 
-        use aws_config::{retry::RetryConfig, BehaviorVersion};
+        use aws_config::{BehaviorVersion, retry::RetryConfig};
 
         let max_attempts = 100;
         let max_backoff = 3;
