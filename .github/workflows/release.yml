@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.CI_ACCESS_TOKEN }}
